@@ -1,0 +1,45 @@
+Revision history for cPanel-TaskQueue
+
+0.400  Tue Jul 13 13:00:00 2010
+       Change namespace to reside in cPanel modules.
+       Make taskqueued more robust as a daemon.
+       First external release.
+0.306  Tue Jul 8 15:00:00 2010
+       Add the Ctrl code and the taskqueuectl script.
+       Add taskqueuerun program to perform one process step in the quue.
+       Add taskqueued program as a basic queue running daemon.
+0.305  Thu May 13 10:00:00 2010
+       Extended testing.
+       Add support to PluginManager for loading particular plugins.
+       Protect ChildProcessor from SIGCHLD events.
+0.302  Tue May 4 12:00:00 2010
+       Reduce aggressiveness of the file locking on the queue file in the
+         code checking for completed child processess.
+0.301  Fri Apr 29 16:30:00 2010
+       Prevent scheduler from updating schedule file unnecessarily.
+       Reduce file locking for schedule and queue files that are not changing.
+0.300  Wed Sep 9 10:30:00 2009
+       Added logic to recover from a corrupted cachefile on initial load.
+       Split POD out of source files to speed loading.
+       Add notify mechanism.
+       Bumped all version numbers for consistency.
+0.2.2  Wed Aug 19 15:44:00 2009
+       Corrected error reporting in the case the cachefiles are corrupted.
+0.2.0  Wed Apr 1 12:00:00 2009
+       Reducing memory footprint: remove warnings, Class::Std, List::Util,
+       File::Spec, File::Path, and Cwd.
+0.1.2  Wed Mar 11 16:00:00 2009
+       Added find_command and extended test coverage.
+       Increased robustness thanks to more extensive testing. Corrected a
+       couple of errors on error-recovery paths.
+       Fixed a bad assumption in the file locking code.
+       Updated documentation on some of the classes.
+       Add the Cookbook documentation.
+0.1.1  Not Released
+       Better queue and scheduling cachefile formats. Corrected typo in docs.
+0.1.0  Wed Feb 18 15:00:00 2009
+       First release for use in the CPanel code.
+0.0.5  Not Yet Released
+       Redo the logging and locking policy code to something more reasonable.
+0.0.4  Tue Dec  2 12:27:27 2008
+       Initial internal release.
