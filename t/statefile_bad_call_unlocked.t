@@ -9,20 +9,20 @@ use File::Path ();
 use strict;
 use warnings;
 
-use cPanel::CacheFile;
+use cPanel::StateFile;
 use MockCacheable;
 
-my $dir = '/tmp/cache_test';
-my $file = "$dir/cache_dir/cache_file";
+my $dir = '/tmp/state_test';
+my $file = "$dir/state_dir/state_file";
 my $lockname = "$file.lock";
 
 cleanup();
 
 my $mock_obj = MockCacheable->new;
-my $cache = cPanel::CacheFile->new( { cache_file => $file, data_obj => $mock_obj } );
+my $state = cPanel::StateFile->new( { state_file => $file, data_obj => $mock_obj } );
 
 {
-    my $guard = $cache->synch();
+    my $guard = $state->synch();
     eval { $guard->call_unlocked(); };
     like( $@, qr/Missing coderef/, 'Correctly handle missing arg to call_unlocked' );
 

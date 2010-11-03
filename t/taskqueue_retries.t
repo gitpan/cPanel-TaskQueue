@@ -17,7 +17,7 @@ use cPanel::TaskQueue::Scheduler;
 use cPanel::TaskQueue;
 use cPanel::TaskQueue::Task;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 # Processor designed to test retry logic.
 {
@@ -50,11 +50,11 @@ cPanel::TaskQueue->register_task_processor( 'task', MockTimeoutProcessor->new() 
 cleanup();
 
 my $sched = cPanel::TaskQueue::Scheduler->new(
-    { name => 'tasks', cache_dir => $cachedir }
+    { name => 'tasks', state_dir => $statedir }
 );
 isa_ok( $sched, 'cPanel::TaskQueue::Scheduler', 'Scheduler object built.' );
 my $queue = cPanel::TaskQueue->new(
-    { name => 'tasks', cache_dir => $cachedir }
+    { name => 'tasks', state_dir => $statedir }
 );
 isa_ok( $queue, 'cPanel::TaskQueue', 'Queue object built.' );
 
@@ -96,6 +96,6 @@ cleanup();
 # Clean up after myself
 sub cleanup {
     foreach my $file ( 'tasks_sched.yaml', 'task_sched.yaml.lock' ) {
-        unlink "$cachedir/$file" if -e "$cachedir/$file";
+        unlink "$statedir/$file" if -e "$statedir/$file";
     }
 }

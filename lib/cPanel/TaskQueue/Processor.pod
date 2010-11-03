@@ -5,7 +5,7 @@ cPanel::TaskQueue::Processor - Processes an individual task from the cPanel::Tas
 
 =head1 VERSION
 
-This document describes cPanel::TaskQueue::Processor version 0.400.
+This document describes cPanel::TaskQueue::Processor version 0.401.
 
 =head1 SYNOPSIS
 
@@ -101,6 +101,16 @@ The default method returns C<undef>. Any false value uses whatever the default
 value for the TaskQueue defines. A subclass may override this method to provide
 a longer time out value for cases where the processing is known to take some
 time.
+
+=item $proc->deferral_tags( $task )
+
+Return a list of tags that that the supplied C<$task> defers.
+
+=item $proc->is_task_deferred( $task, $defer_hash )
+
+Check the supplied C<$task> against the C<$defer_hash> to decide if the task
+should be deferred. Return a C<true> value if the task should be deferred,
+false otherwise.
 
 =back
 

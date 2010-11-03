@@ -80,12 +80,12 @@ sub main {
 
     my $queue = cPanel::TaskQueue->new({
         name => $qname,
-        cache_dir => $queue_dir,
+        state_dir => $queue_dir,
         max_running => 1,
     });
     my $sched = cPanel::TaskQueue::Scheduler->new({
         name => $qname,
-        cache_dir => $queue_dir,
+        state_dir => $queue_dir,
     });
 
     my $retry_count = 0;
@@ -219,20 +219,20 @@ The command line options that configure the program are
 =item --dir={queuedir}
 
 This required parameter specifies a directory in which we can find the
-C<TaskQueue>'s cache files. The files to be accessed should be readable by the
+C<TaskQueue>'s state files. The files to be accessed should be readable by the
 current user for the program to work.
 
 =item --qname={queue name}
 
 This optional parameter specifies the name associated with the C<TaskQueue>
-object. It is used to create the name of the C<TaskQueue> cache file. If not
+object. It is used to create the name of the C<TaskQueue> state file. If not
 supplied, a default value of C<main> is used.
 
 =item --sname={scheduler name}
 
 This optional parameter specifies the name associated with the
 C<TaskQueue::Scheduler> object. It is used to create the name of the
-C<TaskQueue::Scheduler> cache file. If not supplied, the specified queue name
+C<TaskQueue::Scheduler> state file. If not supplied, the specified queue name
 is used.
 
 =item --plugindir={directory}

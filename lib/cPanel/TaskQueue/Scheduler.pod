@@ -5,15 +5,15 @@ cPanel::TaskQueue::Scheduler - Priority queue of Tasks to Queue at some time in 
 
 =head1 VERSION
 
-This document describes cPanel::TaskQueue::Scheduler version 0.400.
+This document describes cPanel::TaskQueue::Scheduler version 0.401.
 
 =head1 SYNOPSIS
 
     use cPanel::TaskQueue;
     use cPanel::TaskQueue::Scheduler;
 
-    my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => '/home/$user/.cpanel/cache' } );
-    my $sched = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', cache_dir => '/home/$user/.cpanel/cache' } );
+    my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => '/home/$user/.cpanel/state' } );
+    my $sched = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', state_dir => '/home/$user/.cpanel/state' } );
 
     $sched->schedule_task( 'init_quota', {delay_seconds=>10} );
     $sched->schedule_task( 'edit_quota fred 0', {delay_seconds=>60} );
@@ -54,20 +54,24 @@ supplied hashref.
 
 =over 4
 
-=item I<cache_dir>
+=item I<state_dir>
 
-This required parameter specifies a directory where the cache should be written.
+This required parameter specifies a directory where the state should be written.
 This directory is created if it does not exist.
 
 =item I<name>
 
 This required parameter specifies the name of the scheduler. This name is used
-to construct the name of the cache file used to store the scheduler information.
+to construct the name of the state file used to store the scheduler information.
+
+=item I<state_timeout>
+
+This optional parameter specifies the timeout to use for flocking the state file.
+The value is in seconds and defaults to the cPanel::StateFile default value.
 
 =item I<cache_timeout>
 
-This optional parameter specifies the timeout to use for flocking the cache file.
-The value is in seconds and defaults to the cPanel::CacheFile default value.
+I<Deprecated>. Replaced by the I<state_timeout>.
 
 =item I<token>
 
@@ -76,7 +80,7 @@ the token. This allows recreating access to a Scheduler that was instantiated
 in another process.  It also helps support serializing information about a
 C<Scheduler> as part of a defined task.
 
-If a token is supplied, the I<name> and I<cache_dir> parameters are ignored
+If a token is supplied, the I<name> and I<state_dir> parameters are ignored
 because the token encodes that information.
 
 =back
@@ -211,21 +215,21 @@ Returns the number of tasks processed, C<0> if there were no tasks to process.
 =head2 CACHE SUPPORT
 
 These methods should not be used directly, they exist to support the
-C<cPanel::CacheFile> interface that persists the scheduler information to disk.
+C<cPanel::StateFile> interface that persists the scheduler information to disk.
 
 =over 4
 
 =item $q->load_from_cache( $fh )
 
-This method loads the scheduler information from the disk cache. It is called
-by the C<cPanel::CacheFile> object owned by this object.
+This method loads the scheduler information from the disk state. It is called
+by the C<cPanel::StateFile> object owned by this object.
 
 The user of this class should never need to call this method.
 
 =item $q->save_to_cache( $fh )
 
-This method saves the scheduler information to the disk cache. It is called by
-the C<cPanel::CacheFile> object owned by this object.
+This method saves the scheduler information to the disk state. It is called by
+the C<cPanel::StateFile> object owned by this object.
 
 The user of this class should never need to call this method.
 
@@ -300,7 +304,7 @@ The I<token> parameter supplied to I<new> is not of the correct form to be a C<c
 
 =item C<< No caching directory supplied. >>
 
-The required I<cache_dir> parameter was missing when constructing the
+The required I<state_dir> parameter was missing when constructing the
 C<TaskQueue::Scheduler> object. The object was not created.
 
 =item C<< No queue name supplied. >>
@@ -308,12 +312,12 @@ C<TaskQueue::Scheduler> object. The object was not created.
 The required I<name> parameter was missing when constructing the C<TaskQueue::Scheduler>
 object. The object was not created.
 
-=item C<< Not a recognized TaskQueue Scheduler cache. >>
+=item C<< Not a recognized TaskQueue Scheduler state file. >>
 
-=item C<< Invalid version of TaskQueue Scheduler cache. >>
+=item C<< Invalid version of TaskQueue Scheduler state file. >>
 
-Either the cache file is invalid or it is not a C<cPanel::TaskQueue::Scheduler>
-cache file.
+Either the state file is invalid or it is not a C<cPanel::TaskQueue::Scheduler>
+state file.
 
 =item C<< Cannot queue an empty command. >>
 
@@ -351,7 +355,7 @@ The only policy supported by C<Cpane::TaskQueue::Scheduler> is I<-logger>.
 
 YAML::Syck
 
-cPanel::TaskQueue, cPanel::TaskQueue::Task, cPanel::CacheFile
+cPanel::TaskQueue, cPanel::TaskQueue::Task, cPanel::StateFile
 
 =head1 INCOMPATIBILITIES
 
@@ -363,7 +367,7 @@ none reported.
 
 =head1 SEE ALSO
 
-cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, and cPanel::CacheFile
+cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, and cPanel::StateFile
 
 =head1 LICENCE AND COPYRIGHT
 

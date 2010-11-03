@@ -11,7 +11,7 @@ use Test::More tests => 39;
 use cPanel::TaskQueue;
 use cPanel::TaskQueue::Processor;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 my $missing_dir = '/tmp/task_queue_test';
 
 {
@@ -44,7 +44,7 @@ cPanel::TaskQueue->register_task_processor( 'mock', MockProcessor->new() );
 cleanup();
 
 # Create the real TaskQueue
-my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => $cachedir } );
+my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => $statedir } );
 isa_ok( $queue, 'cPanel::TaskQueue', 'Correct object built.' );
 is( $queue->get_name, 'tasks', 'Queue is named correctly.' );
 
@@ -124,7 +124,7 @@ sub remove_and_check_tasks {
 
 # Clean up after myself
 sub cleanup {
-    foreach my $dir ($cachedir, $missing_dir) {
+    foreach my $dir ($statedir, $missing_dir) {
         foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.lock' ) {
             unlink "$dir/$file" if -e "$dir/$file";
         }

@@ -10,7 +10,7 @@ use lib "$FindBin::Bin/mocks";
 use Test::More tests => 2;
 use cPanel::TaskQueue;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 eval {
     cPanel::TaskQueue->new();
@@ -18,6 +18,6 @@ eval {
 ok( defined $@, "Cannot create TaskQueue with no directory." );
 
 eval {
-    cPanel::TaskQueue->new( { cache_dir => $cachedir } );
+    cPanel::TaskQueue->new( { state_dir => $statedir } );
 };
 ok( defined $@, "Cannot create TaskQueue with no name." );

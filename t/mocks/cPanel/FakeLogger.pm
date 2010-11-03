@@ -1,7 +1,7 @@
 package cPanel::FakeLogger;
 
 # Mock version of a Logger class to be used in testing the logging policy code
-# for CacheFile and TaskQueue.
+# for StateFile and TaskQueue.
 
 sub new {
     my ($class) = @_;

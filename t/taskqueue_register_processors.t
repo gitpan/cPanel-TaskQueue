@@ -10,7 +10,7 @@ use lib "$FindBin::Bin/mocks";
 use Test::More tests => 20;
 use cPanel::TaskQueue;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 eval {
     cPanel::TaskQueue->register_task_processor();
@@ -38,7 +38,7 @@ ok( cPanel::TaskQueue->register_task_processor( 'mock', $mock_processor ),
     'new TaskProcessor command registered' );
 ok( cPanel::TaskQueue->unregister_task_processor( 'mock' ), 'Remove mock processor.' );
 
-my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => $cachedir } );
+my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => $statedir } );
 isa_ok( $queue, 'cPanel::TaskQueue', 'Correct object built.' );
 
 my $times_executed = 0;
@@ -93,6 +93,6 @@ cleanup();
 # Clean up after myself
 sub cleanup {
     foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.lock' ) {
-        unlink "$cachedir/$file" if -e "$cachedir/$file";
+        unlink "$statedir/$file" if -e "$statedir/$file";
     }
 }

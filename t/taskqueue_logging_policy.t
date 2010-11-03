@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Test the cPanel::CacheFile module.
+# Test the cPanel::StateFile module.
 #
 
 use FindBin;
@@ -32,11 +32,11 @@ cleanup();
 eval {
     my $cf = cPanel::TaskQueue->new( {} );
 };
-like( $@, qr/caching directory/, 'Cannot create CacheFile without parameters' );
-like( ($logger->get_msgs())[0], qr/throw.*?caching directory/, 'Logged correctly.' );
+like( $@, qr/state directory/, 'Cannot create StateFile without parameters' );
+like( ($logger->get_msgs())[0], qr/throw.*?state directory/, 'Logged correctly.' );
 $logger->reset_msgs();
 
-my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => $dir } );
+my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => $dir } );
 
 cPanel::TaskQueue->register_task_processor( 'mock', sub {} );
 

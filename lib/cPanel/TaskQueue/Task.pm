@@ -1,12 +1,13 @@
 package cPanel::TaskQueue::Task;
+BEGIN {
+  $cPanel::TaskQueue::Task::VERSION = '0.500';
+}
 
 use strict;
 #use warnings;
 
-our $VERSION = 0.400;
-
 # Namespace for the ids created by this class.
-my $task_uuid = "TaskQueue-Task";
+my $task_uuid = 'TaskQueue-Task';
 
 # These methods are intended to help document the importance of the message and to supply 'seam' that
 #   could be used to modify the logging behavior of the TaskQueue.
@@ -53,21 +54,22 @@ sub new {
     my @args = ( $argstring =~ m/('(?: \\' | [^'] )*' | "(?: \\" | [^"] )*" | \S+ )/xg );
     foreach my $arg ( @args ) {
         # remove quotes and escapes.
-        $arg =~ s/^['"]|["']$//g;
+        $arg =~ s/^['"]//;
+        $arg =~ s/["']$//;
         $arg =~ s/\\(['"])/$1/g;
     }
 
     return bless {
-        _command => $command,
-        _argstring => $argstring,
-        _args => \@args,
-        _timestamp => time,
-        _uuid => $uuid,
+        _command       => $command,
+        _argstring     => $argstring,
+        _args          => \@args,
+        _timestamp     => time,
+        _uuid          => $uuid,
         _child_timeout => $timeout,
-        _started => undef,
-        _pid => undef,
-        _retries => $retries,
-        _userdata => $userdata,
+        _started       => undef,
+        _pid           => undef,
+        _retries       => $retries,
+        _userdata      => $userdata,
     }, $class;
 }
 
@@ -120,16 +122,16 @@ sub mutate {
 }
 
 # Accessors
-sub command           { return $_[0]->{_command} }
+sub command           { return $_[0]->{_command}; }
 sub full_command      { return "$_[0]->{_command} $_[0]->{_argstring}"; }
-sub argstring         { return $_[0]->{_argstring} }
+sub argstring         { return $_[0]->{_argstring}; }
 sub args              { return @{$_[0]->{_args}}; }
-sub timestamp         { return $_[0]->{_timestamp} }
-sub uuid              { return $_[0]->{_uuid} }
-sub child_timeout     { return $_[0]->{_child_timeout} }
-sub started           { return $_[0]->{_started} }
-sub pid               { return $_[0]->{_pid} }
-sub retries_remaining { return $_[0]->{_retries} }
+sub timestamp         { return $_[0]->{_timestamp}; }
+sub uuid              { return $_[0]->{_uuid}; }
+sub child_timeout     { return $_[0]->{_child_timeout}; }
+sub started           { return $_[0]->{_started}; }
+sub pid               { return $_[0]->{_pid}; }
+sub retries_remaining { return $_[0]->{_retries}; }
 sub get_userdata {
     my $self = shift;
     my $key = shift;
@@ -196,7 +198,7 @@ sub _verify_userdata_arg {
     return;
 }
 
-1;    # Magic true value required at the end of the module
+1;
 
 __END__
 

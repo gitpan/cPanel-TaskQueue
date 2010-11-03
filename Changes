@@ -1,5 +1,10 @@
 Revision history for cPanel-TaskQueue
 
+0.500     2010-11-03 13:27:14 America/Chicago
+       Move exception handling toward best practice.
+       Rename the CacheFile concept to StateFile, which is more accurate.
+       Add ability to pause processing waiting tasks into the processing phase.
+       Add support deferral logic.
 0.400  Tue Jul 13 13:00:00 2010
        Change namespace to reside in cPanel modules.
        Make taskqueued more robust as a daemon.

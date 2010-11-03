@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Test the cPanel::CacheFile module.
+# Test the cPanel::StateFile module.
 #
 
 use FindBin;
@@ -15,21 +15,21 @@ BEGIN {
     $logger = cPanel::FakeLogger->new;
 };
 
-use cPanel::CacheFile ( '-logger' => $logger );
+use cPanel::StateFile ( '-logger' => $logger );
 
 # test bad new calls.
 eval {
-    my $cf = cPanel::CacheFile->new();
+    my $cf = cPanel::StateFile->new();
 };
-like( $@, qr/cache filename/, 'Cannot create CacheFile without parameters' );
-like( ($logger->get_msgs())[0], qr/throw.*?cache filename/, 'Logged correctly.' );
+like( $@, qr/state filename/, 'Cannot create StateFile without parameters' );
+like( ($logger->get_msgs())[0], qr/throw.*?state filename/, 'Logged correctly.' );
 
-# Put a logger on the specific CacheFile
-my $cfile = '/tmp/wade.cache';
+# Put a logger on the specific StateFile
+my $cfile = '/tmp/wade.state';
 
 my $logger2 = cPanel::FakeLogger->new;
 eval {
-    my $cf = cPanel::CacheFile->new({cache_file=>$cfile,data_obj=>{},logger=>$logger2});
+    my $cf = cPanel::StateFile->new({state_file=>$cfile,data_obj=>{},logger=>$logger2});
 };
 like( $@, qr/required interface/, 'Cannot create CachFile with bad data object.' );
 like( ($logger2->get_msgs())[0], qr/throw.*?required interface/, 'Logged correctly.' );

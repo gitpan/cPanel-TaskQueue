@@ -1,17 +1,17 @@
 
 =head1 NAME
 
-cPanel::CacheFile::FileLocker - Lock and unlock files using C<flock>.
+cPanel::StateFile::FileLocker - Lock and unlock files using C<flock>.
 
 
 =head1 VERSION
 
-This document describes cPanel::CacheFile::FileLocker version 0.400
+This document describes cPanel::StateFile::FileLocker version 0.401
 
 
 =head1 SYNOPSIS
 
-    use cPanel::CacheFile::FileLocker;
+    use cPanel::StateFile::FileLocker;
 
 =head1 DESCRIPTION
 
@@ -22,7 +22,7 @@ system call to lock the file.
 
 =over 4
 
-=item cPanel::CacheFile::FileLocker->new()
+=item cPanel::StateFile::FileLocker->new()
 
 Create a new C<FileLocker> object. The constructor takes an optional hash
 reference that can be used to customize the behavior of the C<FileLocker>.
@@ -184,7 +184,7 @@ Either someone deleted your lockfile, or the name you supplied is not valid.
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
-cPanel::CacheFile::FileLocker requires no configuration files or environment variables.
+cPanel::StateFile::FileLocker requires no configuration files or environment variables.
 
 
 =head1 DEPENDENCIES

@@ -5,13 +5,13 @@ cPanel::TaskQueue::Task - Objects representing the task concept.
 
 =head1 VERSION
 
-This document describes cPanel::TaskQueue::Task version 0.400.
+This document describes cPanel::TaskQueue::Task version 0.401.
 
 =head1 SYNOPSIS
 
     use cPanel::TaskQueue;
 
-    my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => "/home/$user/.cpanel/cache" } );
+    my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => "/home/$user/.cpanel/state" } );
 
     $queue->queue_task( "init_quota" );
     $queue->queue_task( "edit_quota fred 0" );

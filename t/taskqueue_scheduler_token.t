@@ -7,13 +7,13 @@ use warnings;
 
 use cPanel::TaskQueue::Scheduler;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 # In case the last test did not succeed.
 cleanup();
 
 my $sched = cPanel::TaskQueue::Scheduler->new(
-    { name => 'tasks', cache_dir => $cachedir }
+    { name => 'tasks', state_dir => $statedir }
 );
 
 my $token = $sched->get_token();
@@ -65,6 +65,6 @@ like( $@, qr/Invalid token./, 'File does not match' );
 # Clean up after myself
 sub cleanup {
     foreach my $file ( 'tasks_sched.yaml', 'task_sched.yaml.lock' ) {
-        unlink "$cachedir/$file" if -e "$cachedir/$file";
+        unlink "$statedir/$file" if -e "$statedir/$file";
     }
 }

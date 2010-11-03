@@ -1,9 +1,10 @@
 package cPanel::TaskQueue::Processor;
+BEGIN {
+  $cPanel::TaskQueue::Processor::VERSION = '0.500';
+}
 
 use strict;
 #use warnings;
-
-our $VERSION = 0.400;
 
 {
     sub new {
@@ -48,12 +49,31 @@ our $VERSION = 0.400;
 
         die "No processing has been specified for this task.\n";
     }
+
+    sub deferral_tags {
+        my ($self, $task) = @_;
+        return;
+    }
+
+    sub is_task_deferred {
+        my ($self, $task, $defer_hash) = @_;
+        return unless $defer_hash && keys %{ $defer_hash };
+
+        foreach my $tag ( $self->deferral_tags( $task ) ) {
+            return 1 if exists $defer_hash->{$tag};
+        }
+
+        return;
+    }
 }
 
 # To simplify use, here is a simple module that turns a code ref into a valid
 # TaskQueue::Processor.
 {
     package cPanel::TaskQueue::Processor::CodeRef;
+BEGIN {
+  $cPanel::TaskQueue::Processor::CodeRef::VERSION = '0.500';
+}
     use base 'cPanel::TaskQueue::Processor';
 
     {

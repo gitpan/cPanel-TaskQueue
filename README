@@ -1,45 +1,13 @@
-cPanel-TaskQueue version 0.300
-
-The cPanel::TaskQueue module was designed to deal with the situation where more
-than one cooperating process work through a queue of tasks that need to be
-performed.
-
-The normal usage scenario would be one (or more) processes that are taking
-'commands' (or tasks formatted as a string) from somewhere and adding them to
-the TaskQueue. Another process would be taking tasks from the queue and executing
-them. The execution process can spawn child processes to do the work if necessary.
-This process can also limit the number of child processes running at any point
-in time.
-
-The cPanel::TaskQueue itself is a wrapper and interface around a disk file that
-persists the queue and provides safe concurrent access to the data stored in the
-queue.
-
-INSTALLATION
-
-To install this module, run the following commands:
-
-	perl Makefile.PL
-	make
-	make test
-	make install
-
-Alternatively, to install with Module::Build, you can use the following commands:
-
-	perl Build.PL
-	./Build
-	./Build test
-	./Build install
 
 
-DEPENDENCIES
+This archive contains the distribution cPanel-TaskQueue,
+version 0.500:
 
-Fcntl, File::Path, POSIX, and YAML::Syck.
+  Manage a FIFO queue of tasks to perform.
+
+This software is copyright (c) 2010 by cPanel, Inc..
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
 
 
-COPYRIGHT AND LICENCE
-
-Copyright (C) 2010, cPanel
-
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.

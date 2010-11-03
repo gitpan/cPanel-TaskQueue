@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Test the cPanel::CacheFile module.
+# Test the cPanel::StateFile module.
 #
 
 use FindBin;
@@ -9,11 +9,11 @@ use File::Path ();
 use Data::Dumper;
 
 use Test::More tests => 24;
-use cPanel::CacheFile;
+use cPanel::StateFile;
 use MockCacheable;
 
-my $dir = '/tmp/cache_test';
-my $file = "$dir/cache_dir/cache_file";
+my $dir = '/tmp/state_test';
+my $file = "$dir/state_dir/state_file";
 my $lockname = "$file.lock";
 
 # TODO: Need to testing for timeout logic, but it would slow down the tests.
@@ -25,8 +25,8 @@ cleanup();
 # test valid creation
 my $mock_obj = MockCacheable->new;
 
-my $cache = cPanel::CacheFile->new( { cache_file => $file, data_obj => $mock_obj } );
-isa_ok( $cache, 'cPanel::CacheFile' );
+my $state = cPanel::StateFile->new( { state_file => $file, data_obj => $mock_obj } );
+isa_ok( $state, 'cPanel::StateFile' );
 
 ok( -e $file, "Cache file should have been created." );
 
@@ -38,20 +38,20 @@ ok( !-e $lockname, "File not locked at this time." );
 {
     my $msg;
     local $SIG{__WARN__} = sub { $msg = join( ' ', @_ ); };
-    $cache->warn( "This is a warning\n" );
+    $state->warn( "This is a warning\n" );
     is( $msg, "This is a warning\n", 'warn method works.' );
 
-    $cache->info( "This is an info message\n" );
+    $state->info( "This is an info message\n" );
     is( $msg, "This is an info message\n", 'info method works.' );
 }
 
 # Test empty file case
 {
-    open( my $fh, '>', $file ) or die "Unable to create empty cache file: $!";
+    open( my $fh, '>', $file ) or die "Unable to create empty state file: $!";
     close( $fh );
 
-    my $cache = cPanel::CacheFile->new( { cache_file => $file, data_obj => $mock_obj } );
-    isa_ok( $cache, 'cPanel::CacheFile' );
+    my $state = cPanel::StateFile->new( { state_file => $file, data_obj => $mock_obj } );
+    isa_ok( $state, 'cPanel::StateFile' );
 
     ok( !-z $file, "Cache file should be filled." );
 
@@ -62,15 +62,15 @@ ok( !-e $lockname, "File not locked at this time." );
 }
 
 {
-    open( my $fh, '<', $file ) or die "Unable to read cache file: $!\n";
+    open( my $fh, '<', $file ) or die "Unable to read state file: $!\n";
     my $file_data = <$fh>;
-    is( $file_data, 'Save string: 2 0', 'cache_file is correct.' );
+    is( $file_data, 'Save string: 2 0', 'state_file is correct.' );
 }
 
 # Test re-synch when file hasn't changed.
 # Lock the file for update.
 {
-    my $guard = $cache->synch();
+    my $guard = $state->synch();
     ok( -e $lockname, "File is locked." );
 
     ok( !$mock_obj->{load_called}, "memory up-to-date, don't load." );
@@ -79,23 +79,23 @@ ok( !-e $lockname, "File not locked at this time." );
 }
 ok( !-e $lockname, "File is unlocked." );
 
-# Update cache file directly.
+# Update state file directly.
 {
-    open( my $fh, '>', $file ) or die "Unable to write cache file: $!\n";
-    print $fh 'This is the updated cache file.';
+    open( my $fh, '>', $file ) or die "Unable to write state file: $!\n";
+    print $fh 'This is the updated state file.';
     close( $fh );
 }
 
-ok( $cache->synch(), 'Synch occured.' );
+ok( $state->synch(), 'Synch occured.' );
 ok( !-e $lockname, "File is not locked." );
 
 is( $mock_obj->{load_called}, 1, "file changed, load." );
-is( $mock_obj->{data}, 'This is the updated cache file.', 'Correct data is loaded.' );
+is( $mock_obj->{data}, 'This is the updated state file.', 'Correct data is loaded.' );
 
 # Test that we don't reload after the last synch
-ok( $cache->synch(), 'Synch occured.' );
+ok( $state->synch(), 'Synch occured.' );
 is( $mock_obj->{load_called}, 1, "don't load again." );
-is( $mock_obj->{data}, 'This is the updated cache file.', 'Correct data is loaded.' );
+is( $mock_obj->{data}, 'This is the updated state file.', 'Correct data is loaded.' );
 
 cleanup();
 

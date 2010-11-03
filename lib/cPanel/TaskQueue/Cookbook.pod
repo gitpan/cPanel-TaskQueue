@@ -24,11 +24,11 @@ object and the cached version of the C<TaskQueue> on disk.
 
    use cPanel::TaskQueue;
 
-   my $q = cPanel::TaskQueue->new(
-       {name=>'tasks', cache_dir=>'/var/taskqueue/'}
-   );
+   my $q = cPanel::TaskQueue->new({
+       name=>'tasks', state_dir=>'/var/taskqueue/'
+   });
 
-If the specified I<cache_dir> is writable, a cache file will be created in this
+If the specified I<state_dir> is writable, a state file will be created in this
 directory to hold the C<TaskQueue> data.
 
 =head3 I want a TaskQueue with different defaults.
@@ -38,9 +38,9 @@ the functioning of the queue. These parameters are changed by adding more named
 parameters to the C<new> call, when creating the C<cPanel::TaskQeue> object. For
 example,
 
-   my $q = cPanel::TaskQueue->new(
-       {name=>'tasks', cache_dir=>'/var/taskqueue/', max_running=>10}
-    );
+   my $q = cPanel::TaskQueue->new({
+       name=>'tasks', state_dir=>'/var/taskqueue/', max_running=>10
+    });
 
 changes the number of tasks that are allowed to run at the same time to 10 from
 the default of 2.
@@ -48,11 +48,11 @@ the default of 2.
 You can also set more than one of these parameters at a time. For example, if
 you need to modify all of the timeout values, you code do
 
-   my $q = cPanel::TaskQueue->new(
-       {name=>'tasks', cache_dir=>'/var/taskqueue/',
+   my $q = cPanel::TaskQueue->new({
+       name=>'tasks', state_dir=>'/var/taskqueue/',
        default_timeout => 30, max_timeout => 600,
-       default_child_timeout => 30*60,}
-   );
+       default_child_timeout => 30*60,
+   });
 
 This sets the default and maximum timeout values for an I<in-process> task to
 30 secs and 10 minutes, respectively. We also set the timeout value for a child
@@ -67,44 +67,44 @@ object and the cached version of the C<Scheduler> on disk.
 
    use cPanel::TaskQueue::Scheduler;
 
-   my $s = cPanel::TaskQueue::Scheduler->new(
-       {name=>'tasks', cache_dir=>'/var/taskqueue/'}
-   );
+   my $s = cPanel::TaskQueue::Scheduler->new({
+       name=>'tasks', state_dir=>'/var/taskqueue/'
+   });
 
-If the specified I<cache_dir> is writable, a cache file will be created in this
+If the specified I<state_dir> is writable, a state file will be created in this
 directory to hold the C<Scheduler> data.
 
 =head3 I need to access a TaskQueue defined elsewhere.
 
 Let's say you want to access a C<TaskQueue> that has been instantiated elsewhere
 (in this program or another). All you have to do is create a C<cPanel::TaskQueue>
-object with the same I<name> and I<cache_dir> as the previous one to have access
+object with the same I<name> and I<state_dir> as the previous one to have access
 for queuing new tasks and such.
 
    use cPanel::TaskQueue;
 
-   my $q = cPanel::TaskQueue->new(
-       {name=>'tasks', cache_dir=>'/var/taskqueue/'}
-   );
+   my $q = cPanel::TaskQueue->new({
+       name=>'tasks', state_dir=>'/var/taskqueue/'
+   });
 
 This C<TaskQueue> is equivalent to any other C<TaskQueue> instantiated with the
-same I<name> and I<cache_dir>.
+same I<name> and I<state_dir>.
 
 =head3 I need to access a Scheduler defined elsewhere.
 
 Let's say you want to access a C<Scheduler> that has been instantiated elsewhere
 (in this program or another). All you have to do is create a C<cPanel::TaskQueue::Scheduler>
-object with the same I<name> and I<cache_dir> as the previous one to have access
+object with the same I<name> and I<state_dir> as the previous one to have access
 for queuing new tasks and such.
 
    use cPanel::TaskQueue::Scheduler;
 
-   my $s = cPanel::TaskQueue::Scheduler->new(
-       {name=>'tasks', cache_dir=>'/var/taskqueue/'}
-   );
+   my $s = cPanel::TaskQueue::Scheduler->new({
+       name=>'tasks', state_dir=>'/var/taskqueue/'
+   });
 
 This C<Scheduler> is equivalent to any other C<Scheduler> instantiated with the
-same I<name> and I<cache_dir>.
+same I<name> and I<state_dir>.
 
 =head3 Using a Scheduler Token
 
@@ -119,7 +119,7 @@ reconstruct an equivalent C<Scheduler> object.
    my $token = $s->get_token();
 
    # From some other place in the code or another process.
-   my $s2 = cPanel::TaskQueue::Scheduler->new( {token=>$token} );
+   my $s2 = cPanel::TaskQueue::Scheduler->new({ token=>$token });
 
 At this point, C<$s> and C<$s2> reference the same C<Scheduler> file safely and
 can be treated as one instance of the object.
@@ -524,6 +524,46 @@ This example not only shows the ability to retry, but also the ability to pick
 a different delay for the different tasks. We also allow exceptions we don't
 recognize to continue to the calling code which we expect to handle them.
 
+=head3 I have a command that should not run when another command is running.
+
+If you have two or more commands that may be in the queue that you want to
+prevent from running simultaneously, you need to enable I<deferral> support
+in the task processor. Each C<TaskQueue::Processor> supports a couple of methods
+for this purpose. The first and simplest is C<deferral_tags>. This method
+returns a list of tag strings.
+
+The TaskQueue system maintains a list of tags for tasks that are currently being
+processed. If the TaskQueue attempts to begin processing of a new task and its
+C<deferral_tags> method returns any strings in the list of currently processing
+tags, that task will be deferred. As an example, you could add the following
+method to your processor.
+
+    sub deferral_tags {
+        my ($self, $task) = @_;
+
+        return qw(foo bar foobar);
+    }
+
+This method takes a task object, because the deferral tags could depend on the
+actual task. For example, a task could have different deferral tags based on its
+arguments. This approach gives good flexibility without a complicated interface.
+
+=head3 I have a command that needs to be deferred in a more complicated way.
+
+When a new task is considered for processing (because it is at the beginning of
+of the waiting queue and the TaskQueue is not processing its maximum number of
+tasks), the C<is_task_deferred> method of the task processor for this task is
+called.
+
+By default, this method compares the deferral tags for this task against a
+supplied hash containing the currently active tags. By replacing this method
+in a C<TaskQueue::Processor>, you can make the deferral decision much more
+complex. The method receives a C<$task> object and the C<$defer_hash>.
+
+A particular task object will be tested for deferral when it becomes available
+for processing. If it has previously been deferred, it will also be tested
+when a task completes processing to determine if it is still deferred.
+
 =head2 Queue Processing
 
 =head3 I want to process the next command in the queue.
@@ -686,7 +726,7 @@ No bugs have been reported in these recipes.
 
 =head1 SEE ALSO
 
-cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, and cPanel::CacheFile
+cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, and cPanel::StateFile
 
 =head1 LICENCE AND COPYRIGHT
 

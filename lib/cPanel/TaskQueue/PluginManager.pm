@@ -1,9 +1,10 @@
 package cPanel::TaskQueue::PluginManager;
+BEGIN {
+  $cPanel::TaskQueue::PluginManager::VERSION = '0.500';
+}
 
 use strict;
 use cPanel::TaskQueue ();
-
-our $VERSION = 0.400;
 
 my %plugins_list;
 

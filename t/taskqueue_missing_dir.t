@@ -14,8 +14,8 @@ my $missing_dir = '/tmp/task_queue_test';
 cleanup();
 
 # Test queue directory creation.
-ok( cPanel::TaskQueue->new( { name => 'tasks', cache_dir=> $missing_dir } ), 'Cache created with missing dir' );
-ok( -d $missing_dir, 'created the cache directory' );
+ok( cPanel::TaskQueue->new( { name => 'tasks', state_dir=> $missing_dir } ), 'Cache created with missing dir' );
+ok( -d $missing_dir, 'created the state directory' );
 cleanup();
 
 

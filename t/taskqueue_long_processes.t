@@ -15,7 +15,7 @@ use lib "$FindBin::Bin/mocks";
 use Test::More tests => 34;
 use cPanel::TaskQueue;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 {
     package SleepTask;
@@ -38,7 +38,7 @@ SKIP:
 
     cPanel::TaskQueue->register_task_processor( 'sleep', SleepTask->new() );
 
-    my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => $cachedir, max_running => 5 } );
+    my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => $statedir, max_running => 5 } );
     isa_ok( $queue, 'cPanel::TaskQueue', 'Correct object built.' );
 
     foreach my $cnt ( 1 .. 8 ) {
@@ -88,6 +88,6 @@ SKIP:
 # Clean up after myself
 sub cleanup {
     foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.lock' ) {
-        unlink "$cachedir/$file" if -e "$cachedir/$file";
+        unlink "$statedir/$file" if -e "$statedir/$file";
     }
 }

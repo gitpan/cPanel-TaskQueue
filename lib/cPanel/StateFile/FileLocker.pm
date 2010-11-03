@@ -1,10 +1,11 @@
-package cPanel::CacheFile::FileLocker;
+package cPanel::StateFile::FileLocker;
+BEGIN {
+  $cPanel::StateFile::FileLocker::VERSION = '0.500';
+}
 
 #use warnings;
 use strict;
 use Fcntl ();
-
-our $VERSION = 0.400;
 
 sub new {
     my ($class, $args_hr) = @_;
@@ -50,7 +51,7 @@ sub file_lock {
             return $lockfile;
         }
         # Unable to create the lockfile.
-        $self->_info( "Unable to create the lockfile, waiting" );
+        $self->_info( 'Unable to create the lockfile, waiting' );
 
         while ( $deadline > time ) {
             my ($pid, $name, $max_time) = $self->_read_lock_file( $lockfile );
@@ -95,7 +96,7 @@ sub file_lock {
 sub file_unlock {
     my ($self, $lockfile) = @_;
 
-    $self->_throw( "Missing lockfile name." ) unless $lockfile;
+    $self->_throw( 'Missing lockfile name.' ) unless $lockfile;
     $lockfile =~ tr/<>;&|//d;
     unless ( -e $lockfile ) {
         $self->_warn( "Lockfile '$lockfile' lost!" );
@@ -234,7 +235,7 @@ sub _pid_alive {
     return 1;
 }
 
-1; # Magic true value required at end of module
+1;
 
 __END__
 

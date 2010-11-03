@@ -10,13 +10,13 @@ use lib "$FindBin::Bin/mocks";
 use Test::More tests => 41;
 use cPanel::TaskQueue;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 # In case the last test did not succeed.
 cleanup();
 
 # Create the real TaskQueue
-my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => $cachedir } );
+my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => $statedir } );
 isa_ok( $queue, 'cPanel::TaskQueue', 'Correct object built.' );
 is( $queue->get_name, 'tasks', 'Queue is named correctly.' );
 
@@ -58,7 +58,7 @@ is( $task->argstring(), 'a  b  c', 'Correct command argument string.' );
 is( $task->uuid(), $qid2, 'Correct Task id.' );
 
 # Test a second TaskQueue on same file.
-my $q2 = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => $cachedir } );
+my $q2 = cPanel::TaskQueue->new( { name => 'tasks', state_dir => $statedir } );
 ok( $q2->is_task_queued( $qid2 ), 'Has read the previous queue' );
 my $qid3 = $q2->queue_task( 'noop g w j' );
 ok( $qid3, 'Have a queue id for new task' );
@@ -122,6 +122,6 @@ cleanup();
 # Clean up after myself
 sub cleanup {
     foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.lock' ) {
-        unlink "$cachedir/$file" if -e "$cachedir/$file";
+        unlink "$statedir/$file" if -e "$statedir/$file";
     }
 }

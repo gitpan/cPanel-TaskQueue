@@ -31,10 +31,10 @@ __END__
 
 =head1 NAME
 
-MockCacheable - Mock the interface for a cacheable data object to allow testing of CacheFile.
+MockCacheable - Mock the interface for a cacheable data object to allow testing of StateFile.
 
 =head1 DESCRIPTION
 
 This is a mocked, data object that provides the appropiate interface to the
-CacheFile object. Interface is pretty transparent for us to verify that it is
+StateFile object. Interface is pretty transparent for us to verify that it is
 called correctly.

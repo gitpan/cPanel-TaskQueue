@@ -1,4 +1,7 @@
 package cPanel::TaskQueue::Scheduler;
+BEGIN {
+  $cPanel::TaskQueue::Scheduler::VERSION = '0.500';
+}
 
 # cpanel - cPanel/TaskQueue/Scheduler.pm          Copyright(c) 2010 cPanel, Inc.
 #                                                           All rights Reserved.
@@ -12,9 +15,7 @@ use strict;
 use YAML::Syck             ();     # Data Serialization
 use cPanel::TaskQueue      ();
 use cPanel::TaskQueue::Task();
-use cPanel::CacheFile      ();
-
-our $VERSION = 0.400;
+use cPanel::StateFile      ();
 
 # -----------------------------------------------------------------------------
 # Policy code: The following allows is a little weird because its intent is to 
@@ -26,7 +27,7 @@ our $VERSION = 0.400;
 
 # These methods are intended to help document the importance of the message and
 #   to supply 'seam' that could be used to modify the logging behavior of the
-#   CacheFile.
+#   StateFile.
 my $are_policies_set = 0;
 my $pkg = __PACKAGE__;
 
@@ -42,7 +43,7 @@ sub import {
         my ($policy,$module) = splice( @_, 0, 2 );
         my @methods = ();
         if ( '-logger' eq $policy ) {
-            cPanel::CacheFile->import( '-logger' => $module );
+            cPanel::StateFile->import( '-logger' => $module );
         }
         else {
             die "Unrecognized policy '$policy'\n";
@@ -63,13 +64,13 @@ sub _first (&@) {  ## no critic(ProhibitSubroutinePrototypes)
 }
 
 # Namespace value used when creating unique task ids.
-my $tasksched_uuid = "TaskQueue-Scheduler";
+my $tasksched_uuid = 'TaskQueue-Scheduler';
 
 {
-    my $FILETYPE = 'TaskScheduler'; # Identifier at the beginning of the cache file
+    my $FILETYPE = 'TaskScheduler'; # Identifier at the beginning of the state file
     my $CACHE_VERSION = 2; # Cache file version number.
 
-    # Disk Cache & cache file.
+    # Disk Cache & state file.
     #
     sub get_name { $_[0]->{scheduler_name}; }
     # --------------------------------------
@@ -81,65 +82,68 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         my $self = bless {
             next_id    => 1,
             time_queue => [],
-            disk_cache => undef,
+            disk_state => undef,
         }, $class;
 
         if ( exists $args_ref->{token} ) {
             my ($version,$name,$file) = split( ':\|:', $args_ref->{token} );
             # have all parts
-            cPanel::CacheFile->_throw( 'Invalid token.' )
+            cPanel::StateFile->_throw( 'Invalid token.' )
                 unless defined $version and defined $name and defined $file;
             # all parts make sense.
-            cPanel::CacheFile->_throw( 'Invalid token.' )
+            cPanel::StateFile->_throw( 'Invalid token.' )
                 unless 'tqsched1' eq $version and $file =~ m{/\Q$name\E_sched\.yaml$};
 
             $self->{scheduler_name} = $name;
-            $self->{disk_cache_file} = $file;
+            $self->{disk_state_file} = $file;
         }
         else {
-            cPanel::CacheFile->_throw( 'No caching directory supplied.' ) unless exists $args_ref->{cache_dir};
-            cPanel::CacheFile->_throw( 'No scheduler name supplied.' ) unless exists $args_ref->{name};
+            $args_ref->{state_dir} ||= $args_ref->{cache_dir} if exists $args_ref->{cache_dir};
+            cPanel::StateFile->_throw( 'No caching directory supplied.' ) unless exists $args_ref->{state_dir};
+            cPanel::StateFile->_throw( 'No scheduler name supplied.' ) unless exists $args_ref->{name};
 
-            $self->{disk_cache_file} = "$args_ref->{cache_dir}/$args_ref->{name}_sched.yaml";
+            $self->{disk_state_file} = "$args_ref->{state_dir}/$args_ref->{name}_sched.yaml";
             $self->{scheduler_name} = $args_ref->{name};
         }
 
         # Make a disk file to track the object.
-        my $cache_args = {
-            cache_file=>$self->{disk_cache_file}, data_obj => $self,
+        my $state_args = {
+            state_file=>$self->{disk_state_file}, data_obj => $self,
+            # Deprecated version
             exists $args_ref->{cache_timeout} ? (timeout => $args_ref->{cache_timeout}) : (),
+            exists $args_ref->{state_timeout} ? (timeout => $args_ref->{state_timeout}) : (),
             exists $args_ref->{logger} ? (logger => $args_ref->{logger}) : (),
         };
         eval {
-            $self->{disk_cache} = cPanel::CacheFile->new( $cache_args );
-        };
-        if ( $@ ) {
+            $self->{disk_state} = cPanel::StateFile->new( $state_args );
+            1;
+        } or do {
             my $ex = $@;
             # If not a loading error, rethrow.
-            cPanel::CacheFile->_throw( $ex ) unless $ex =~ /Not a recognized|Invalid version/;
-            cPanel::CacheFile->_warn( $ex );
-            cPanel::CacheFile->_warn( "Moving bad cache file and retry.\n" );
-            cPanel::CacheFile->_notify(
+            cPanel::StateFile->_throw( $ex ) unless $ex =~ /Not a recognized|Invalid version/;
+            cPanel::StateFile->_warn( $ex );
+            cPanel::StateFile->_warn( "Moving bad state file and retry.\n" );
+            cPanel::StateFile->_notify(
                 'Unable to load TaskQueue::Scheduler metadata',
-                "Loading of [$self->{disk_cache_file}] failed: $ex\n"
-                . "Moving bad file to [$self->{disk_cache_file}.broken] and retrying.\n"
+                "Loading of [$self->{disk_state_file}] failed: $ex\n"
+                . "Moving bad file to [$self->{disk_state_file}.broken] and retrying.\n"
             );
-            unlink "$self->{disk_cache_file}.broken";
-            rename $self->{disk_cache_file}, "$self->{disk_cache_file}.broken"; 
+            unlink "$self->{disk_state_file}.broken";
+            rename $self->{disk_state_file}, "$self->{disk_state_file}.broken"; 
 
-            $self->{disk_cache} = cPanel::CacheFile->new( $cache_args );
-        }
+            $self->{disk_state} = cPanel::StateFile->new( $state_args );
+        };
         return $self;
     }
 
     sub throw {
         my $self = shift;
-        return $self->{disk_cache} ? $self->{disk_cache}->throw( @_ ) : cPanel::CacheFile->_throw( @_ );
+        return $self->{disk_state} ? $self->{disk_state}->throw( @_ ) : cPanel::StateFile->_throw( @_ );
     }
     # Not using warn, so don't define it.
     sub info {
         my $self = shift;
-        return $self->{disk_cache} ? $self->{disk_cache}->info( @_ ) : undef;
+        return $self->{disk_state} ? $self->{disk_state}->info( @_ ) : undef;
     }
 
     # -------------------------------------------------------
@@ -150,8 +154,8 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         local $/;
         my ($magic, $version, $meta) = YAML::Syck::Load( scalar <$fh> );
 
-        $self->throw( "Not a recognized TaskQueue Scheduler cache.\n" ) unless $magic eq $FILETYPE;
-        $self->throw( "Invalid version of TaskQueue Scheduler cache.\n" ) unless $version eq $CACHE_VERSION;
+        $self->throw( "Not a recognized TaskQueue Scheduler state file.\n" ) unless $magic eq $FILETYPE;
+        $self->throw( "Invalid version of TaskQueue Scheduler state file.\n" ) unless $version eq $CACHE_VERSION;
 
         # Next id should continue increasing.
         #   (We might want to deal with wrap-around at some point.)
@@ -167,7 +171,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         my ($self,$fh) = @_;
 
         my $meta = {
-            nextid => $self->{next_id},
+            nextid        => $self->{next_id},
             waiting_queue => $self->{time_queue},
         };
         return print $fh YAML::Syck::Dump( $FILETYPE, $CACHE_VERSION, $meta );
@@ -198,8 +202,8 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         if ( exists $args->{attempts} ) {
             return unless $args->{attempts} > 0;
             @retry_attrs = (
-                retries => $args->{attempts},
-                userdata => {sched => $self->get_token()}
+                retries  => $args->{attempts},
+                userdata => { sched => $self->get_token() }
             );
         }
         my $task = cPanel::TaskQueue::Task->new(
@@ -217,7 +221,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         }
 
         # Lock the queue before we begin accessing it.
-        my $guard = $self->{disk_cache}->synch();
+        my $guard = $self->{disk_state}->synch();
         my $old_count = @{$self->{time_queue}};
 
         $self->{time_queue} = [ grep { $_->{task}->uuid() ne $uuid } @{$self->{time_queue}} ];
@@ -234,7 +238,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         }
 
         # Update from disk, but don't worry about lock. Information only.
-        $self->{disk_cache}->synch();
+        $self->{disk_state}->synch();
 
         return _first { $_->{task}->uuid() eq $uuid } @{$self->{time_queue}};
     }
@@ -247,7 +251,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         }
 
         # Update from disk, but don't worry about lock. Information only.
-        $self->{disk_cache}->synch();
+        $self->{disk_state}->synch();
 
         my $task = _first { $_->{task}->uuid() eq $uuid } @{$self->{time_queue}};
         return unless defined $task;
@@ -258,7 +262,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         my ($self) = @_;
 
         # Update from disk, but don't worry about lock. Information only.
-        $self->{disk_cache}->synch();
+        $self->{disk_state}->synch();
         return scalar @{$self->{time_queue}};
     }
 
@@ -266,7 +270,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         my ($self) = @_;
 
         # Update from disk, but don't worry about lock. Information only.
-        $self->{disk_cache}->synch();
+        $self->{disk_state}->synch();
         return unless @{$self->{time_queue}};
 
         return $self->{time_queue}->[0]->{task}->clone();
@@ -276,7 +280,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         my ($self) = @_;
 
         # Update from disk, but don't worry about lock. Information only.
-        $self->{disk_cache}->synch();
+        $self->{disk_state}->synch();
         return unless @{$self->{time_queue}};
 
         return $self->{time_queue}->[0]->{time} - time;
@@ -290,7 +294,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
         }
 
         # Don't generate lock yet, we may not need one.
-        $self->{disk_cache}->synch();
+        $self->{disk_state}->synch();
         my $count = 0;
         my $guard;
         eval {
@@ -301,7 +305,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
                 if ( !$guard ) {
                     # Now we know we'll be changing the schedule, so we need to
                     # lock it.
-                    $guard ||= $self->{disk_cache}->synch();
+                    $guard ||= $self->{disk_state}->synch();
                     next;
                 }
                 # Should be safe from deadlock unless queue calls back to me.
@@ -322,13 +326,13 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
     sub get_token {
         my ( $self, $command, $time ) = @_;
 
-        return join( ':|:', 'tqsched1', $self->{scheduler_name}, $self->{disk_cache_file} );
+        return join( ':|:', 'tqsched1', $self->{scheduler_name}, $self->{disk_state_file} );
     }
 
     sub snapshot_task_schedule {
         my ($self) = @_;
 
-        $self->{disk_cache}->synch();
+        $self->{disk_state}->synch();
 
         return [ map { {time=>$_->{time}, task=>$_->{task}->clone()} } @{$self->{time_queue}} ];
     }
@@ -338,7 +342,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
     sub _schedule_the_task {
         my ( $self, $time, $task ) = @_;
 
-        my $guard = $self->{disk_cache}->synch();
+        my $guard = $self->{disk_state}->synch();
         my $item = { time => $time, task => $task };
         # if the list is empty, or time after all in list.
         if ( !@{$self->{time_queue}} or $time >= $self->{time_queue}->[-1]->{time} ) {
@@ -374,7 +378,7 @@ my $tasksched_uuid = "TaskQueue-Scheduler";
     }
 }
 
-1;    # Magic true value required at the end of the module
+1;
 
 __END__
 

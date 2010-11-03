@@ -15,18 +15,18 @@ use lib "$FindBin::Bin/mocks";
 use Test::More tests => 84;
 use cPanel::TaskQueue::Scheduler;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 # In case the last test did not succeed.
 cleanup();
 
 eval {
-    cPanel::TaskQueue::Scheduler->new( {cache_dir => $cachedir} );
+    cPanel::TaskQueue::Scheduler->new( {state_dir => $statedir} );
 };
 like( $@, qr/scheduler name/, 'Must supply a name.' );
 
 my $sched = cPanel::TaskQueue::Scheduler->new(
-    { name => 'tasks', cache_dir => $cachedir }
+    { name => 'tasks', state_dir => $statedir }
 );
 isa_ok( $sched, 'cPanel::TaskQueue::Scheduler', 'Correct object built.' );
 
@@ -120,7 +120,7 @@ check_task_insertion( $sched, 'in-order, dupes',
 );
 
 my $sched2 = cPanel::TaskQueue::Scheduler->new(
-    { name => 'tasks', cache_dir => $cachedir }
+    { name => 'tasks', state_dir => $statedir }
 );
 
 ok( !defined $sched->peek_next_task(), 'Return undef task if no tasks.' );
@@ -178,6 +178,6 @@ sub check_task_insertion {
 # Clean up after myself
 sub cleanup {
     foreach my $file ( 'tasks_sched.yaml', 'task_sched.yaml.lock' ) {
-        unlink "$cachedir/$file" if -e "$cachedir/$file";
+        unlink "$statedir/$file" if -e "$statedir/$file";
     }
 }

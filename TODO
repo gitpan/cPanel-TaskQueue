@@ -1,0 +1,86 @@
+* New defer logic idea
+    * Add a should_defer method to the task processors.
+    * Still need the tags
+        * TaskQueue has a list of tags that we pass to the should_defer method
+        * Ability to add tags to the list and remove tags from the list.
+* Add defer logic
+    * Tags to defer on.
+    * Each task has tags that describe what it defers.
+    * Method for recognizing the defer case.
+        - Default case any match
+        - Allow override
+    * Would we want different tags to defer on vs. ones to defer?
+* Add ability to pause the queue (so that no new tasks go to processing)
+    * This is actually part of the processing
+    * The state probably needs to be stored with the queue
+    * Do we want a separate case for preventing scheduling?
+* Add ability to add a task to the front of the queue.
+    * "shove" - Matt and I agreed on this term.
+    * Special handling for duplicate/override
+        - We could ignore this
+            - Ad: Won't make things worse or break anything
+            - Disad: May leave duplicates
+        - We could try to duplicate the way the queue would have resulted
+            - Disad: more complicated
+                - task doesn't get added if later would have overridden
+                - Removing task in the queue if its a duplicate
+            - Disad: Potential for swapping order of tasks that need a particular order.
+            - Conclusion: Too confusing.
+        - We could replace any duplicate task when we insert
+            - Remove task in queue if it is a duplicate
+            - Disad: Potential for swapping order of tasks that need a particular order.
+        - We could replace any duplicate or overrideable task when we insert
+            - Disad: Potential for swapping order of tasks that need a particular order.
+    * The issue is that we can have dependencies that are not explicit.
+    * Possibly some form of macro/batch task would be a better way to prevent "combined"
+      tasks from being split.
+* Consider moving author tests to xt and following Test::XT approach.
+
+----------------------
+
+queue
+    taskA
+    build_apache_conf
+    apache_restart
+insert apache_restart
+
+queue
+    taskA
+    build_locale_databases es
+    taskB
+insert build_locale_databases es
+
+queue
+    taskA
+    build_locale_databases es
+    taskB
+insert build_locale_databases
+
+
+----------------------
+Potential Tasks (tagged)
+------
+build_apache_conf       apache
+apache_restart          apache
+build_local_databases   locales
+runweblogs              logs bandwidth
+mysqluserstore          mysql
+dbstoregrants           mysql dbstore
+restarttailwatch        tailwatch
+reloadtailwatch         tailwatch
+
+restart_imap            imap
+restart_exim            exim
+mailman {start,stop}    mailman
+restart_mailman         mailman
+restartmailmanurls      mailman
+update_db_cache         db_cache
+restartmysql            mysql
+checkphpini             phpini
+install_php_inis        phpini
+interchange stop        interchange
+installinterchange      interchange
+restat_interchange      interchange
+startcpsrvd             cpsrvd
+
+restartpostgres         postgres

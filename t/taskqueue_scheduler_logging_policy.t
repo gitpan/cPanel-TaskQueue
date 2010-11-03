@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# Test the cPanel::CacheFile module.
+# Test the cPanel::StateFile module.
 #
 
 use FindBin;
@@ -32,11 +32,11 @@ cleanup();
 eval {
     my $cf = cPanel::TaskQueue::Scheduler->new();
 };
-like( $@, qr/caching directory/, 'Cannot create CacheFile without parameters' );
+like( $@, qr/caching directory/, 'Cannot create StateFile without parameters' );
 like( ($logger->get_msgs())[0], qr/throw.*?caching directory/, 'Logged correctly.' );
 $logger->reset_msgs();
 
-my $ts = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', cache_dir => $dir } );
+my $ts = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', state_dir => $dir } );
 
 # Make a task with no retries remaining.
 my $task = cPanel::TaskQueue::Task->new( {cmd=>'noop', id=>1, retries=> 1});

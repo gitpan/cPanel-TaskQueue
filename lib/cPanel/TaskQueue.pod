@@ -5,13 +5,13 @@ cPanel::TaskQueue - FIFO queue of tasks to perform
 
 =head1 VERSION
 
-This document describes cPanel::TaskQueue version 0.400
+This document describes cPanel::TaskQueue version 0.401
 
 =head1 SYNOPSIS
 
     use cPanel::TaskQueue ();
 
-    my $queue = cPanel::TaskQueue->new( { name => 'tasks', cache_dir => "/home/$user/.cpanel/cache" } );
+    my $queue = cPanel::TaskQueue->new( { name => 'tasks', state_dir => "/home/$user/.cpanel/queue" } );
 
     $queue->queue_task( "init_quota" );
     $queue->queue_task( "edit_quota fred 0" );
@@ -50,20 +50,25 @@ Creates a new TaskQueue object based on the parameters from the supplied hashref
 
 =over 4
 
+=item I<state_dir>
+
+This required parameter specifies a directory where the state file should be
+written.  This directory is created if it does not exist.
+
 =item I<cache_dir>
 
-This required parameter specifies a directory where the cache should be written.
-This directory is created if it does not exist.
+I<Deprecated> parameter that has been replaced with I<state_dir>. If no value is
+supplied by I<state_dir>, I<cache_dir>'s value will be used.
 
 =item I<name>
 
 This required parameter specifies the name of the queue. This name is used to
-construct the name of the cache file used to store the queue information.
+construct the name of the state file used to store the queue information.
 
-=item I<cache_timeout>
+=item I<state_timeout>
 
-This optional parameter specifies the timeout to use for flocking the cache file.
-The value is in seconds and defaults to the cPanel::CacheFile default value.
+This optional parameter specifies the timeout to use for flocking the state file.
+The value is in seconds and defaults to the cPanel::StateFile default value.
 
 =item I<default_timeout>
 
@@ -98,7 +103,7 @@ C<cPanel::TaskQueue::Processor> object.
 =back
 
 If these parameters are not specified, but a C<TaskQueue> with this I<name> and
-I<cache_dir> has already been created, the new C<TaskQueue> will use the parameters
+I<state_dir> has already been created, the new C<TaskQueue> will use the parameters
 that were stored in the file.  This causes all instances of this C<TaskQueue>
 to act the same. Providing these parameters also updates all other instances of
 this C<TaskQueue> the next time they need to C<synch>.
@@ -265,6 +270,21 @@ Because of the nature of a task queue, the particular I<uuid> tested may be sche
 for processsing or finish processing immediately after the test. I'm not sure if this
 test is actually useful for anything.
 
+=item $q->is_task_deferred( $uuid )
+
+Does the specified I<uuid> reference a task that is currently deferred?
+
+Because of the nature of a task queue, the particular I<uuid> tested may be scheduled
+for processsing or finish processing immediately after the test. I'm not sure if this
+test is actually useful for anything.
+
+=item $q->how_many_deferred()
+
+Returns a count of the number of tasks currently that are currently in the
+deferred state. Since a task can complete at any time, the exact value returned
+by this method is not guaranteed for any length of time after the method
+returns.
+
 =item $q->how_many_in_process()
 
 Returns a count of the number of items currently being processed. Since a task
@@ -284,26 +304,41 @@ start processing a task at any time, the output of this method may be out of
 date as soon as it returns. This method is only really useful for a general idea
 of the state of the queue.
 
+=item $q->pause_processing()
+
+Prevent any more tasks from moving from the waiting state into the processing
+state. This does not stop any tasks from processing once they begin processing.
+If the queue is paused, no more tasks will move from the waitig state to the
+processing state.
+
+=item $q->resume_processing()
+
+Allow the queue to resume processing tasks.
+
+=item $q->is_paused()
+
+Returns true if the queue processing has been paused, false otherwise.
+
 =back
 
 =head2 CACHE SUPPORT
 
-These methods should not be used directly, they exist to support the C<cPanel::CacheFile>
+These methods should not be used directly, they exist to support the C<cPanel::StateFile>
 interface that persists the queue information to disk.
 
 =over 4
 
 =item $q->load_from_cache( $fh )
 
-This method loads the queue information from the disk cache. It is called by the
-C<cPanel::CacheFile> object owned by this object.
+This method loads the queue information from the disk state file. It is called
+by the C<cPanel::StateFile> object owned by this object.
 
 The user of this class should never need to call this method.
 
 =item $q->save_to_cache( $fh )
 
-This method saves the queue information to the disk cache. It is called by the
-C<cPanel::CacheFile> object owned by this object.
+This method saves the queue information to the disk state file. It is called by
+the C<cPanel::StateFile> object owned by this object.
 
 The user of this class should never need to call this method.
 
@@ -440,7 +475,7 @@ command name.
 
 =item C<< No caching directory supplied. >>
 
-The required I<cache_dir> parameter was missing when constructing the C<TaskQueue>
+The required I<state_dir> parameter was missing when constructing the C<TaskQueue>
 object. The object was not created.
 
 =item C<< No queue name supplied. >>
@@ -448,11 +483,11 @@ object. The object was not created.
 The required I<name> parameter was missing when constructing the C<TaskQueue>
 object. The object was not created.
 
-=item C<< Not a recognized TaskQueue cache. >>
+=item C<< Not a recognized TaskQueue state file. >>
 
-=item C<< Invalid version of TaskQueue cache. >>
+=item C<< Invalid version of TaskQueue state file. >>
 
-Either the cache file is invalid or it is not a TaskQueue cache file.
+Either the state file is invalid or it is not a TaskQueue state file.
 
 =item C<< Cannot queue an empty command. >>
 
@@ -498,7 +533,7 @@ happen, so if it does, we remove them.
 
 YAML::Syck, POSIX
 
-cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, cPanel::CacheFile
+cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, cPanel::StateFile
 
 =head1 INCOMPATIBILITIES
 
@@ -510,7 +545,7 @@ none reported.
 
 =head1 SEE ALSO
 
-cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, and cPanel::CacheFile
+cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, and cPanel::StateFile
 
 =head1 LICENCE AND COPYRIGHT
 

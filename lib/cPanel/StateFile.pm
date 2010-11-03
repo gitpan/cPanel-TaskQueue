@@ -1,12 +1,13 @@
-package cPanel::CacheFile;
+package cPanel::StateFile;
+BEGIN {
+  $cPanel::StateFile::VERSION = '0.500';
+}
 
 use strict;
 #use warnings;
 
 use Fcntl ();
 use File::Path ();
-
-our $version = 0.400;
 
 my $the_logger;
 my $the_locker;
@@ -25,6 +26,9 @@ my $pkg = __PACKAGE__;
 # CORE C<die> and C<warn> functions.
 {
     package DefaultLogger;
+BEGIN {
+  $DefaultLogger::VERSION = '0.500';
+}
     sub new {
         my ($class) = @_;
         return bless {}, $class;
@@ -71,9 +75,9 @@ sub _get_logger {
 
 sub _get_locker {
     unless ( defined $the_locker ) {
-        eval "use cPanel::CacheFile::FileLocker;";  ## no critic (ProhibitStringyEval)
+        eval 'use cPanel::StateFile::FileLocker;';  ## no critic (ProhibitStringyEval)
         $pkg->_throw( @_ ) if $@;
-        $the_locker = cPanel::CacheFile::FileLocker->new( {logger => _get_logger()} );
+        $the_locker = cPanel::StateFile::FileLocker->new( {logger => _get_logger()} );
     }
     return $the_locker;
 }
@@ -128,14 +132,17 @@ sub import {
     # Locks the file on creation, throwing on failure. Unlocks the file when
     # the object is destroyed.
     {
-        package cPanel::CacheFile::Guard;
+        package cPanel::StateFile::Guard;
+BEGIN {
+  $cPanel::StateFile::Guard::VERSION = '0.500';
+}
 
         sub new {
             my ($class, $args_ref) = @_;
             $pkg->throw( 'Args parameter must be a hash reference.' ) unless 'HASH' eq ref $args_ref;
-            $pkg->throw( 'No CacheFile.' ) unless exists $args_ref->{cache};
+            $pkg->throw( 'No StateFile.' ) unless exists $args_ref->{state};
 
-            my $self = bless { cache_file => $args_ref->{cache} }, $class;
+            my $self = bless { state_file => $args_ref->{state} }, $class;
 
             $self->_lock();
 
@@ -154,40 +161,40 @@ sub import {
 
         sub _lock {
             my $self = shift;
-            my $cache_file = $self->{cache_file};
+            my $state_file = $self->{state_file};
 
-            my $filename = $cache_file->{file_name};
-            $self->{lock_file} = $cache_file->{locker}->file_lock( $filename );
-            $cache_file->throw( "Unable to acquire file lock for '$filename'." ) unless $self->{lock_file};
+            my $filename = $state_file->{file_name};
+            $self->{lock_file} = $state_file->{locker}->file_lock( $filename );
+            $state_file->throw( "Unable to acquire file lock for '$filename'." ) unless $self->{lock_file};
             return;
         }
 
         sub _unlock {
             my $self = shift;
-            my $cache_file = $self->{cache_file};
+            my $state_file = $self->{state_file};
             return unless $self->{lock_file};
 
-            if ( $cache_file->{file_handle} ) {
+            if ( $state_file->{file_handle} ) {
                 # TODO probably need to check for failure, but then what do I do?
                 eval {
                     local $SIG{'ALRM'} = sub { die "flock 8 timeout\n"; };
-                    my $orig_alarm = alarm $cache_file->{flock_timeout};
-                    flock $cache_file->{file_handle}, 8;
+                    my $orig_alarm = alarm $state_file->{flock_timeout};
+                    flock $state_file->{file_handle}, 8;
                     alarm $orig_alarm;
                 };
-                close $cache_file->{file_handle};
-                $cache_file->{file_handle} = undef;
+                close $state_file->{file_handle};
+                $state_file->{file_handle} = undef;
             }
-            $cache_file->{locker}->file_unlock( $self->{lock_file} );
+            $state_file->{locker}->file_unlock( $self->{lock_file} );
             $self->{lock_file} = undef;
             return;
         }
 
         sub call_unlocked {
             my ($self, $code) = @_;
-            my $cache_file = $self->{cache_file};
-            $cache_file->throw( 'Cannot nest call_unlocked calls.' ) unless defined $self->{lock_file};
-            $cache_file->throw( 'Missing coderef to call_unlocked.' ) unless 'CODE' eq ref $code;
+            my $state_file = $self->{state_file};
+            $state_file->throw( 'Cannot nest call_unlocked calls.' ) unless defined $self->{lock_file};
+            $state_file->throw( 'Missing coderef to call_unlocked.' ) unless 'CODE' eq ref $code;
 
             # unlock for the duration of the code execution
             $self->_unlock();
@@ -196,7 +203,7 @@ sub import {
             # relock even if exception.
             $self->_lock();
             # probably should resync if necessary.
-            $cache_file->_resynch( $self );
+            $state_file->_resynch( $self );
 
             $pkg->_throw( $ex ) if $ex;
 
@@ -205,61 +212,61 @@ sub import {
 
         sub _open {
             my ($self, $mode) = @_;
-            my $cache_file = $self->{cache_file};
-            $cache_file->throw( 'Cannot open cache inside a call_unlocked call.' ) unless defined $self->{lock_file};
+            my $state_file = $self->{state_file};
+            $state_file->throw( 'Cannot open state file inside a call_unlocked call.' ) unless defined $self->{lock_file};
 
-            open my $fh, $mode, $cache_file->{file_name}
-                or $cache_file->throw( "Unable to open cache file '$cache_file->{file_name}': $!" );
+            open my $fh, $mode, $state_file->{file_name}
+                or $state_file->throw( "Unable to open state file '$state_file->{file_name}': $!" );
             eval {
                 local $SIG{'ALRM'} = sub { die "flock 2 timeout\n"; };
-                my $orig_alarm = alarm $cache_file->{flock_timeout};
+                my $orig_alarm = alarm $state_file->{flock_timeout};
                 flock $fh, 2;
                 alarm $orig_alarm;
-            };
-            if ( $@ ) {
+                1;
+            } or do {
                 close( $fh );
                 if( $@ eq "flock 2 timeout\n" ) {
-                    $cache_file->throw( 'Guard timed out trying to open cache file.' );
+                    $state_file->throw( 'Guard timed out trying to open state file.' );
                 }
                 else {
-                    $cache_file->throw( $@ );
+                    $state_file->throw( $@ );
                 }
-            }
-            $cache_file->{file_handle} = $fh;
+            };
+            $state_file->{file_handle} = $fh;
         }
 
         sub update_file {
             my ($self) = @_;
-            my $cache_file = $self->{cache_file};
-            $cache_file->throw( 'Cannot update_file inside a call_unlocked call.' ) unless defined $self->{lock_file};
+            my $state_file = $self->{state_file};
+            $state_file->throw( 'Cannot update_file inside a call_unlocked call.' ) unless defined $self->{lock_file};
 
-            if ( !$cache_file->{file_handle} ) {
-                if( -e $cache_file->{file_name} ) {
+            if ( !$state_file->{file_handle} ) {
+                if( -e $state_file->{file_name} ) {
                     $self->_open( '+<' );
                 }
                 else {
-                    sysopen( my $fh, $cache_file->{file_name}, &Fcntl::O_CREAT|&Fcntl::O_EXCL|&Fcntl::O_RDWR )
-                        or $cache_file->throw( "Cannot create cache file '$cache_file->{file_name}': $!" );
-                    $cache_file->{file_handle} = $fh;
+                    sysopen( my $fh, $state_file->{file_name}, &Fcntl::O_CREAT|&Fcntl::O_EXCL|&Fcntl::O_RDWR )
+                        or $state_file->throw( "Cannot create state file '$state_file->{file_name}': $!" );
+                    $state_file->{file_handle} = $fh;
                 }
             }
-            seek( $cache_file->{file_handle}, 0, 0 );
-            truncate( $cache_file->{file_handle}, 0 )
-                or $cache_file->throw( "Unable to truncate the cache: $!" );
+            seek( $state_file->{file_handle}, 0, 0 );
+            truncate( $state_file->{file_handle}, 0 )
+                or $state_file->throw( "Unable to truncate the state file: $!" );
 
-            $cache_file->{data_object}->save_to_cache( $cache_file->{file_handle} );
-            $cache_file->{file_mtime} = (stat( $cache_file->{file_handle} ))[9];
+            $state_file->{data_object}->save_to_cache( $state_file->{file_handle} );
+            $state_file->{file_mtime} = (stat( $state_file->{file_handle} ))[9];
 
             # Make certain we are at end of file.
-            seek( $cache_file->{file_handle}, 0, 2 )
-                or $cache_file->throw( "Unable to go to end of file: $!" );
-            $cache_file->{file_size} = tell( $cache_file->{file_handle} );
+            seek( $state_file->{file_handle}, 0, 2 )
+                or $state_file->throw( "Unable to go to end of file: $!" );
+            $state_file->{file_size} = tell( $state_file->{file_handle} );
             return;
         }
 
     }
 
-    # Back to CacheFile
+    # Back to StateFile
 
     sub new {
         my ($class, $args_ref) = @_;
@@ -282,14 +289,15 @@ sub import {
                 $self->throw( 'Supplied locker does not support required methods.' );
             }
         }
-        $self->throw( 'No cache filename supplied.' ) unless exists $args_ref->{cache_file};
+        $args_ref->{state_file} ||= $args_ref->{cache_file} if exists $args_ref->{cache_file};
+        $self->throw( 'No state filename supplied.' ) unless exists $args_ref->{state_file};
         $self->throw( 'No data object supplied.' ) unless exists $args_ref->{data_obj};
         my $data_obj = $args_ref->{data_obj};
         $self->throw( 'Data object does not have required interface.' )
             unless eval { $data_obj->can( 'load_from_cache' ) }
                 and eval { $data_obj->can( 'save_to_cache' ) };
 
-        my ($dirname,$file) = ($args_ref->{cache_file} =~ m{^(.*)/([^/]*)$}g);
+        my ($dirname,$file) = ($args_ref->{state_file} =~ m{^(.*)/([^/]*)$}g);
         $dirname =~ s{[^/]+/\.\./}{/}g;  # resolve parent references
         $dirname =~ s{[^/]+/\.\.$}{};
         $dirname =~ s{/\./}{/}g;         # resolve self references
@@ -300,10 +308,10 @@ sub import {
         }
         $self->{file_name} = "$dirname/$file";
 
-        $self->{data_object} = $data_obj;
-        $self->{file_mtime} = -1;
-        $self->{file_size} = -1;
-        $self->{file_handle} = undef;
+        $self->{data_object}   = $data_obj;
+        $self->{file_mtime}    = -1;
+        $self->{file_size}     = -1;
+        $self->{file_handle}   = undef;
         $self->{flock_timeout} = $args_ref->{timeout} || 60;
 
         $self->synch();
@@ -343,7 +351,7 @@ sub import {
         my $guard;
 
         if ( !-e $self->{file_name} or -z _ ) {
-            $guard = cPanel::CacheFile::Guard->new( { cache => $self } );
+            $guard = cPanel::StateFile::Guard->new( { state => $self } );
             # File doesn't exist or is empty, initialize it.
             $guard->update_file();
         }
@@ -354,7 +362,7 @@ sub import {
         # if not assigned anywhere, let the guard die.
         return unless defined wantarray;
 
-        $guard ||= cPanel::CacheFile::Guard->new( { cache => $self } );
+        $guard ||= cPanel::StateFile::Guard->new( { state => $self } );
         # Otherwise return it.
         return $guard;
     }
@@ -365,7 +373,7 @@ sub import {
         my ($mtime,$size) = (stat( $self->{file_name} ))[9,7];
         if( $self->{file_mtime} < $mtime || $self->{file_size} != $size ) {
             # File is newer or a different size
-            $guard ||= cPanel::CacheFile::Guard->new( { cache => $self } );
+            $guard ||= cPanel::StateFile::Guard->new( { state => $self } );
             $guard->_open( '+<' );
             $self->{data_object}->load_from_cache( $self->{file_handle} );
             ($self->{file_mtime}, $self->{file_size}) = (stat( $self->{file_handle} ))[9,7];

@@ -14,9 +14,9 @@ use POSIX qw(strftime);
 use Test::More tests=>4;
 
 use cPanel::FakeLogger;
-use cPanel::CacheFile::FileLocker ();
+use cPanel::StateFile::FileLocker ();
 
-# WARNING: The internal CacheFile locking should never be used this way. However,
+# WARNING: The internal StateFile locking should never be used this way. However,
 # I am peeking inside the class in order to test this functionality. This access
 #  may be removed or changed at any time.
 
@@ -24,7 +24,7 @@ my $filename = "/tmp/fake.file";
 my $lockfile = "$filename.lock";
 
 my $logger = cPanel::FakeLogger->new;
-my $locker = cPanel::CacheFile::FileLocker->new({logger => $logger, max_age=>120, max_wait=>120});
+my $locker = cPanel::StateFile::FileLocker->new({logger => $logger, max_age=>120, max_wait=>120});
 
 SKIP:
 {

@@ -12,20 +12,20 @@ use lib "$FindBin::Bin/mocks";
 use Test::More tests => 15;
 use cPanel::TaskQueue;
 
-my $cachedir = '/tmp';
+my $statedir = '/tmp';
 
 # In case the last test did not succeed.
 cleanup();
 
 # Set all parameters to non-defaults.
 my $q1 = cPanel::TaskQueue->new({
-    name => 'tasks', cache_dir => $cachedir,
+    name => 'tasks', state_dir => $statedir,
     default_timeout => 31, max_timeout => 61,
     max_running => 7, default_child_timeout => 117,
 });
 ok( $q1, 'Initial queue created.' );
 
-my $q2 = cPanel::TaskQueue->new({ name => 'tasks', cache_dir => $cachedir, });
+my $q2 = cPanel::TaskQueue->new({ name => 'tasks', state_dir => $statedir, });
 ok( $q2, 'Second queue created.' );
 
 is( $q2->get_default_timeout(), 31, 'Got default timeout from file' );
@@ -35,7 +35,7 @@ is( $q2->get_default_child_timeout(), 117, 'Got default child timeout from file'
 
 # Check change for all.
 my $q3 = cPanel::TaskQueue->new({
-    name => 'tasks', cache_dir => $cachedir,
+    name => 'tasks', state_dir => $statedir,
     default_timeout => 13, max_timeout => 16,
     max_running => 17, default_child_timeout => 742,
 });
@@ -57,6 +57,6 @@ is( $q1->get_default_child_timeout(), 742, 'Original updated default child timeo
 # Clean up after myself
 sub cleanup {
     foreach my $file ( 'tasks_queue.yaml', 'task_queue.yaml.lock' ) {
-        unlink "$cachedir/$file" if -e "$cachedir/$file";
+        unlink "$statedir/$file" if -e "$statedir/$file";
     }
 }

@@ -1,11 +1,12 @@
 package cPanel::TaskQueue::ChildProcessor;
+BEGIN {
+  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.500';
+}
 
 use strict;
 #use warnings;
 use base 'cPanel::TaskQueue::Processor';
 use cPanel::TaskQueue::Scheduler;
-
-our $VERSION = 0.400;
 
 {
     sub get_child_timeout {
@@ -37,7 +38,7 @@ our $VERSION = 0.400;
         my ($self, $task) = @_;
         my $pid = fork();
 
-        die "Unable to start a child process to handle the '" . $task->command() . "' task\n"
+        die q{Unable to start a child process to handle the '} . $task->command() . "' task\n"
             unless defined $pid;
 
         # Parent returns
@@ -51,9 +52,9 @@ our $VERSION = 0.400;
             $oldalarm = alarm $timeout;
             $self->_do_child_task( $task );
             alarm $oldalarm;
-        };
-        my $ex = $@;
-        if ( $ex ) {
+            1;
+        } or do {
+            my $ex = $@;
             alarm $oldalarm;
             if ( $ex eq "timeout detected\n" ) {
                 eval {
@@ -68,7 +69,7 @@ our $VERSION = 0.400;
             else {
                 die $ex;
             }
-        }
+        };
         exit 0;
     }
 
