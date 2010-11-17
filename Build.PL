@@ -8,12 +8,8 @@ use Module::Build 0.3601;
 my %module_build_args = (
   'build_requires' => {
     'Carp' => '0',
-    'Data::Dumper' => '0',
-    'English' => '0',
     'FindBin' => '0',
-    'MockCacheable' => '0',
-    'Test::More' => '0',
-    'cPanel::FakeLogger' => '0'
+    'Test::More' => '0'
   },
   'configure_requires' => {
     'Module::Build' => '0.3601'
@@ -23,7 +19,7 @@ my %module_build_args = (
     'cPanel, Inc. <cpan@cpanel.net>'
   ],
   'dist_name' => 'cPanel-TaskQueue',
-  'dist_version' => '0.500',
+  'dist_version' => '0.501',
   'license' => 'perl',
   'module_name' => 'cPanel::TaskQueue',
   'recommends' => {},

@@ -6,7 +6,6 @@
 use FindBin;
 use lib "$FindBin::Bin/mocks";
 use File::Path ();
-use Data::Dumper;
 
 use Test::More tests => 7;
 my $logger;

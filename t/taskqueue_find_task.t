@@ -6,7 +6,6 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
-use Data::Dumper;
 
 use Test::More tests => 20; 
 use cPanel::TaskQueue;

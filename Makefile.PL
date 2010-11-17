@@ -13,12 +13,8 @@ my %WriteMakefileArgs = (
   'AUTHOR' => 'cPanel, Inc. <cpan@cpanel.net>',
   'BUILD_REQUIRES' => {
     'Carp' => '0',
-    'Data::Dumper' => '0',
-    'English' => '0',
     'FindBin' => '0',
-    'MockCacheable' => '0',
-    'Test::More' => '0',
-    'cPanel::FakeLogger' => '0'
+    'Test::More' => '0'
   },
   'CONFIGURE_REQUIRES' => {
     'ExtUtils::MakeMaker' => '6.31'
@@ -42,7 +38,7 @@ my %WriteMakefileArgs = (
     'Unix::PID' => '0.21',
     'YAML::Syck' => '0'
   },
-  'VERSION' => '0.500',
+  'VERSION' => '0.501',
   'test' => {
     'TESTS' => 't/*.t'
   }

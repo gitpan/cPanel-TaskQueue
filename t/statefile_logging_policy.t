@@ -6,7 +6,6 @@
 use FindBin;
 use lib "$FindBin::Bin/mocks";
 use File::Path ();
-use Data::Dumper;
 use cPanel::FakeLogger;
 
 use Test::More tests => 4;

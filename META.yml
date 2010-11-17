@@ -4,12 +4,8 @@ author:
   - 'cPanel, Inc. <cpan@cpanel.net>'
 build_requires:
   Carp: 0
-  Data::Dumper: 0
-  English: 0
   FindBin: 0
-  MockCacheable: 0
   Test::More: 0
-  cPanel::FakeLogger: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.31
 dynamic_config: 0
@@ -29,4 +25,4 @@ requires:
   Text::Wrap: 0
   Unix::PID: 0.21
   YAML::Syck: 0
-version: 0.500
+version: 0.501
