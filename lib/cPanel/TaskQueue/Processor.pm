@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Processor;
 BEGIN {
-  $cPanel::TaskQueue::Processor::VERSION = '0.501';
+  $cPanel::TaskQueue::Processor::VERSION = '0.502';
 }
 
 use strict;
@@ -45,9 +45,14 @@ use strict;
     }
 
     sub process_task {
-        my ($self, $task) = @_;
+        my ($self, $task, $logger) = @_;
 
-        die "No processing has been specified for this task.\n";
+        if ( $logger ) {
+            $logger->throw( "No processing has been specified for this task.\n" );
+        }
+        else {
+            die "No processing has been specified for this task.\n";
+        }
     }
 
     sub deferral_tags {
@@ -65,6 +70,35 @@ use strict;
 
         return;
     }
+
+    # Utility functions
+    sub checked_system {
+        my ($self, $args) = @_;
+        die "Argument must be a hashref." unless ref $args eq 'HASH';
+        die "Missing required 'logger' argument." unless $args->{'logger'};
+        $args->{'logger'}->throw( "Missing required 'cmd' argument." )
+            unless defined $args->{'cmd'} && length $args->{'cmd'};
+        $args->{'logger'}->throw( "Missing required 'name' argument." )
+            unless defined $args->{'name'} && length $args->{'name'};
+        $args->{'args'} ||= [];
+
+        my $rc = system $args->{'cmd'}, @{$args->{'args'}};
+        return 0 unless $rc;
+
+        my $message;
+        if ( $rc == -1 ) {
+            $message = "Failed to run $args->{'name'}";
+        }
+        elsif ( $rc & 127 ) {
+            $message = "$args->{'name'} dies with signal: " . ($rc & 127);
+        }
+        else {
+            $message = "$args->{'name'} exited with value " . ($rc >> 8);
+        }
+        $args->{'logger'}->warn( $message );
+
+        return $rc;
+    }
 }
 
 # To simplify use, here is a simple module that turns a code ref into a valid
@@ -72,7 +106,7 @@ use strict;
 {
     package cPanel::TaskQueue::Processor::CodeRef;
 BEGIN {
-  $cPanel::TaskQueue::Processor::CodeRef::VERSION = '0.501';
+  $cPanel::TaskQueue::Processor::CodeRef::VERSION = '0.502';
 }
     use base 'cPanel::TaskQueue::Processor';
 
@@ -90,9 +124,15 @@ BEGIN {
         # Override the default behavior to call the stored coderef with the
         # arguments supplied in the task. Return whatever the coderef returns.
         sub process_task {
-            my ($self, $task) = @_;
+            my ($self, $task, $logger) = @_;
 
-            $self->{proc}->( $task->args() );
+            eval {
+                $self->{proc}->( $task->args() );
+                1;
+            } or do {
+                $logger->throw( $@ );
+            };
+
             return 0;
         }
     }

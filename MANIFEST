@@ -5,7 +5,6 @@ MANIFEST
 META.yml
 Makefile.PL
 README
-TODO
 bin/taskqueuectl
 bin/taskqueued
 bin/taskqueuerun
@@ -30,7 +29,6 @@ lib/cPanel/TaskQueue/Scheduler.pod
 lib/cPanel/TaskQueue/Task.pm
 lib/cPanel/TaskQueue/Task.pod
 t/00.load.t
-t/author-critic.t
 t/mocks/MockCacheable.pm
 t/mocks/cPanel/ExampleTasks/Goodbye.pm
 t/mocks/cPanel/ExampleTasks/Greetings.pm
@@ -73,6 +71,7 @@ t/taskqueue_plugin_manager.t
 t/taskqueue_plugin_manager_load_all.t
 t/taskqueue_plugin_manager_load_named.t
 t/taskqueue_processor.t
+t/taskqueue_processor_checked_system.t
 t/taskqueue_processor_deferrable.t
 t/taskqueue_register_processors.t
 t/taskqueue_retries.t

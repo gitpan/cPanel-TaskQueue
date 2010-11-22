@@ -324,7 +324,7 @@ For example,
     use base 'cPanel::TaskQueue::Processor';
 
     sub process_task {
-        my ($self, $task) = @_;
+        my ($self, $task, $logger) = @_;
 
         my $target = $task->args()->[0];
         my $m = Messaging->new( $target );
@@ -428,7 +428,6 @@ to complete its work. You might implement that as follows:
     use warnings;
     use base 'cPanel::TaskQueue::ChildProcessor';
     use LWP::Simple ();
-    use Carp();
 
     my %url_of = (
          # assume a hash of keywords to urls
@@ -440,10 +439,10 @@ to complete its work. You might implement that as follows:
     }
 
     sub _do_child_task {
-        my ($self, $task) = @_;
+        my ($self, $task, $logger) = @_;
 
         if ( !LWP::Simple::get( $url_of{ $task->get_arg( 0 ) } ) ) {
-            Carp::croak "Could not access site for '", $task->get_arg( 0 ), "'.\n";
+            $logger->warn( "Could not access site for '", $task->get_arg( 0 ), "'.\n" );
         }
 
         return;
@@ -719,6 +718,146 @@ next scheduled event. We also want to schedule C<Task>s as soon as they are
 ready. It's also important to check the C<Scheduler> on every pass through
 the loop, otherwise a series of long-running C<Task>s could prevent us from
 scheduling C<Task>s that are now ready.
+
+=head2 Logging
+
+The C<cPanel::TaskQueue> system has a slightly unusual system for logging that
+is an artifact of the original incarnation of the code. All reporting of
+information to the outside world is handled through a I<Logger Object>
+interface that is defined in the C<cPanel::TaskQueue> documentation.
+
+=head3 How do I log TaskQueue errors through our normal C<Log::Dispatch> interface?
+
+In addition to using C<Log::Dispatch>, we will log notifications to the screen
+rather than sending them through a separate system.
+
+    package Policy::LogiDispatch;
+    use strict;
+    use warnings;
+    use Log::Dispatch;
+
+    sub new {
+        my ($class) = shift;
+        my $self = {
+            logger => Log::Dispatch->new(
+                outputs => [
+                    [ 'File',   min_level => 'info', filename => 'logfile' ],
+                    [ 'Screen', min_level => 'alert', ],
+                ],
+            )
+        };
+        return bless, $class;
+    }
+
+    # Log an error and then 'die'.
+    sub throw {
+        my $self = shift;
+        $self->{logger}->error( @_ );
+        die @_;
+    }
+
+    # Log a warning
+    sub warn {
+        my $self = shift;
+        $self->{logger}->warning( @_ );
+    }
+
+    # Log an info message
+    sub info {
+        my $self = shift;
+        $self->{logger}->info( @_ );
+    }
+
+    # Send a notification through email
+    sub notify {
+        my $self = shift;
+        $self->{logger}->alert( @_ );
+    }
+    1;
+
+Objects of this type can be supplied when creating a specific C<cPanel::TaskQueue>.
+This ties the C<TaskQueue> logging into the C<Log::Log4perl> system.
+
+=head3 How do I log TaskQueue errors through our normal C<Log::Log4perl> interface?
+
+To use the C<Log::Log4perl> module for logging, you will need an adapter object
+that converts the interface to match what C<cPanel::TaskQueue> expects. In the
+example, we will also use C<Email::Sender> to perform the notifications.
+
+    package Policy::Log4perl;
+    use strict;
+    use warnings;
+    use Log::Log4perl;
+    use Email::Sender::Simple qw(sendmail);
+    use Email::Sender::Transport::SMTP ();
+
+    my $SMTP_HOST    = 'smtp.exampl.com';
+    my $SMTP_PORT    = 25;
+    my $FROM_ADDRESS = 'whm-donoreply@exampl.com';
+
+    my $transport = Email::Sender::Transport::SMTP->new(
+        { host => $SMTP_HOST, port => $SMTP_PORT }
+    );
+
+    sub new {
+        my ($class) = shift;
+        my $self = {
+            logger => Log::Log4perl->get_logger( @_ )
+        };
+        return bless, $class;
+    }
+
+    # Log an error and then 'die'.
+    sub throw {
+        my $self = shift;
+        $self->{logger}->error( @_ );
+        die @_;
+    }
+
+    # Log a warning
+    sub warn {
+        my $self = shift;
+        $self->{logger}->warn( @_ );
+    }
+
+    # Log an info message
+    sub info {
+        my $self = shift;
+        $self->{logger}->info( @_ );
+    }
+
+    # Send a notification through email
+    sub notify {
+        my $self = shift;
+        eval {
+            sendmail(
+                join( "\n", @_ ),
+                {
+                    from => $FROM_ADDRESS,
+                    transport => $transport,
+                }
+            );
+            1;
+        } or do {
+            $self->{logger}->error( "Notification failed: $@" );
+        };
+    }
+    1;
+
+Objects of this type can be supplied when creating a specific C<cPanel::TaskQueue>.
+This ties the C<TaskQueue> logging into the C<Log::Log4perl> system.
+
+=head3 How do I log without supplying a notification interface?
+
+If you don't want to provide a separate notification system, redefine the C<notify>
+method to do something else. Using the C<Log::Log4perl> example in the last
+question, you could do the following:
+
+    sub notify {
+        my $self = shift;
+        $self->{logger}->error( 'NOTIFY:', @_ );
+        return;
+    }
 
 =head1 BUGS AND LIMITATIONS
 

@@ -1,6 +1,6 @@
 package cPanel::StateFile;
 BEGIN {
-  $cPanel::StateFile::VERSION = '0.501';
+  $cPanel::StateFile::VERSION = '0.502';
 }
 
 use strict;
@@ -27,7 +27,7 @@ my $pkg = __PACKAGE__;
 {
     package DefaultLogger;
 BEGIN {
-  $DefaultLogger::VERSION = '0.501';
+  $DefaultLogger::VERSION = '0.502';
 }
     sub new {
         my ($class) = @_;
@@ -134,7 +134,7 @@ sub import {
     {
         package cPanel::StateFile::Guard;
 BEGIN {
-  $cPanel::StateFile::Guard::VERSION = '0.501';
+  $cPanel::StateFile::Guard::VERSION = '0.502';
 }
 
         sub new {
@@ -381,6 +381,8 @@ BEGIN {
 
         return $guard;
     }
+
+    sub get_logger { return $_[0]->{logger}; }
 
     sub throw {
         my $self = shift;

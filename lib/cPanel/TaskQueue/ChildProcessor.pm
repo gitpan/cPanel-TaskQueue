@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::ChildProcessor;
 BEGIN {
-  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.501';
+  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.502';
 }
 
 use strict;
@@ -35,10 +35,10 @@ use cPanel::TaskQueue::Scheduler;
     }
 
     sub process_task {
-        my ($self, $task) = @_;
+        my ($self, $task, $logger) = @_;
         my $pid = fork();
 
-        die q{Unable to start a child process to handle the '} . $task->command() . "' task\n"
+        $logger->throw( q{Unable to start a child process to handle the '} . $task->command() . "' task\n" )
             unless defined $pid;
 
         # Parent returns
@@ -50,7 +50,7 @@ use cPanel::TaskQueue::Scheduler;
             local $SIG{'CHLD'} = 'DEFAULT';
             local $SIG{'ALRM'} = sub { die "timeout detected\n"; };
             $oldalarm = alarm $timeout;
-            $self->_do_child_task( $task );
+            $self->_do_child_task( $task, $logger );
             alarm $oldalarm;
             1;
         } or do {
@@ -64,10 +64,10 @@ use cPanel::TaskQueue::Scheduler;
                     # Handle retries
                     $self->retry_task( $task );
                 };
-                die $@ if $@;
+                $logger->throw( $@ ) if $@;
             }
             else {
-                die $ex;
+                $logger->throw( $ex );
             }
         };
         exit 0;
@@ -80,9 +80,9 @@ use cPanel::TaskQueue::Scheduler;
     }
 
     sub _do_child_task {
-        my ($self, $task) = @_;
+        my ($self, $task, $logger) = @_;
 
-        die "No child task defined.\n";
+        $logger->throw( "No child task defined.\n" );
     }
 }
 

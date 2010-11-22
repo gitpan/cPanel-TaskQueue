@@ -14,7 +14,7 @@
     use base 'cPanel::TaskQueue::ChildProcessor';
 
     sub _do_child_task {
-        my ($self, $task) = @_;
+        my ($self, $task, $logger) = @_;
         
         # do something exciting.
 
@@ -50,7 +50,7 @@ This interface of this class is defined by its base class cPanel::TaskQueue::Pro
 
 =over 4
 
-=item $proc->process_task( $task )
+=item $proc->process_task( $task, $logger )
 
 This method has been overridden from the base class to launch a child process and
 execute the C<_do_child_task> method. If the C<_do_child_task> method times out and
@@ -70,10 +70,11 @@ the child process to easily reschedule itself. The optional I<delay> parameter
 specifies how many seconds to delay before queuing the process again. It defaults
 to the value returned by C<get_child_timeout>.
 
-=item $proc->_do_child_task( $task )
+=item $proc->_do_child_task( $task, $logger )
 
 This method is executed in a child process. It is provided a C<cPanel::TaskQueue::Task>
-object.
+object and a logging object. See L<cPanel::TaskQueue/#LOGGER OBJECT>
+for the interface of the C<$logger> object.
 
 A subclass must override this method to provide the needed behavior. This method
 is called after the child process has already been forked, so this subroutine

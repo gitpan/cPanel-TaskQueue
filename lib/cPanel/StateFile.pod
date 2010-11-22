@@ -142,6 +142,11 @@ a chance to load itself. THe file is locked for the duration on the read and the
 lifetime of the returned C<Guard> object. If the C<Guard> object is not stored,
 the file is immediately closed and unlocked.
 
+=item $cache->get_logger()
+
+Return the logger object used by the C<StateFile> object. See the section on
+L</"LOGGER OBJECT"> for the interface this object provides.
+
 =item $state->throw( $msg )
 
 Log the supplied message and C<die>.

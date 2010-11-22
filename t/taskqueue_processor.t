@@ -2,9 +2,11 @@
 
 # Test the cPanel::TaskQueue::Processor module.
 #
+use strict;
+use warnings;
 
-use Test::More tests => 13;
-BEGIN { use_ok( 'cPanel::TaskQueue::Processor' ); };
+use Test::More tests => 12;
+use cPanel::TaskQueue::Processor;
 
 my $proc = cPanel::TaskQueue::Processor->new;
 isa_ok( $proc, 'cPanel::TaskQueue::Processor' );

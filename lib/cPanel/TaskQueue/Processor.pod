@@ -5,7 +5,7 @@ cPanel::TaskQueue::Processor - Processes an individual task from the cPanel::Tas
 
 =head1 VERSION
 
-This document describes cPanel::TaskQueue::Processor version 0.401.
+This document describes cPanel::TaskQueue::Processor version 0.502.
 
 =head1 SYNOPSIS
 
@@ -82,10 +82,12 @@ A subclass will probably want to override this method for more specific processi
 The default definition is to return true regardless of the state of the supplied
 task descriptor.
 
-=item $proc->process_task( $task )
+=item $proc->process_task( $task, $logger )
 
 Perform the task that is described by the supplied cPanel::TaskQueue::Task. The
-parameter is guaranteed not to be C<undef>.
+parameter is guaranteed not to be C<undef>. The C<$logger> parameter is an object
+providing logging facilities for the system. See L<cPanel::TaskQueue/#LOGGER OBJECT>
+for the interface of this object.
 
 This method should return a 0 if the code processing is complete. If the processing
 spawns a child to handle the work, the method should return the pid of the child.
@@ -111,6 +113,52 @@ Return a list of tags that that the supplied C<$task> defers.
 Check the supplied C<$task> against the C<$defer_hash> to decide if the task
 should be deferred. Return a C<true> value if the task should be deferred,
 false otherwise.
+
+=back
+
+=head1 UTILITY METHODS
+
+This section describes convenience methods that may be useful to classes
+derived from the C<Processor> class.
+
+=over 4
+
+=item $proc->checked_system( $hashref )
+
+In many cases, the task to be processed depends on running another program.
+Since handling the return code from C<system> is annoying, it often gets
+ignored.  This method calls the core system routine, and checks the return
+code. It logs an appropriate message for error conditions and is quiet on
+success.  C<checked_system> returns the same return code as C<system>.
+
+The method expects a C<hash ref> describing the request. The parameters in the
+hash ref are:
+
+=over 4
+
+=item logger
+
+This required parameter should provide an object following the logging
+interface described in L<cPanel::TaskQueue/#LOGGER OBJECT>. If this parameter
+is missing, the method throws an exception.
+
+=item name
+
+This required parameter provides a name used in any error messages. If this
+parameter is missing, the method throws an exception.
+
+=item cmd
+
+This required parameter provides the command that system is to execute. If this
+parameter is missing, the method throws an exception.
+
+=item args
+
+This optional parameter is an array reference containing the parameters to pass
+with the command to the C<system> call. If this parameter is missing, an empty
+list is assumed.
+
+=back
 
 =back
 

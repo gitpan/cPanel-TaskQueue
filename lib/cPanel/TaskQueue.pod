@@ -392,50 +392,17 @@ logging as follows when C<use>ing the module.
 
    use cPanel::TaskQueue ( '-logger' => $logger );
 
-The supplied object should supply (at least) 3 methods: C<throw>, C<warn>, and
-C<info>. When needed these methods will be called with the messages to be logged.
-
-The C<throw> method is expected to use C<die> to exit the method. The others
-are expected to continue. For example, an appropriate class for C<Log::Log4perl>
-might do something like the following:
-
-    package Policy::Log4perl;
-    use strict;
-    use warnings;
-    use Log::Log4perl;
-
-    sub new {
-        my ($class) = shift;
-        my $self = {
-            logger => Log::Log4perl->get_logger( @_ )
-        };
-        return bless, $class;
-    }
-
-    sub throw {
-        my $self = shift;
-        $self->{logger}->error( @_ );
-        die @_;
-    }
-
-    sub warn {
-        my $self = shift;
-        $self->{logger}->warn( @_ );
-    }
-
-    sub info {
-        my $self = shift;
-        $self->{logger}->info( @_ );
-    }
-
-This would call the C<Log4perl> code as errors or other messages result in
-messages.
+The supplied object should supply (at least) 4 methods: C<throw>, C<warn>,
+C<info>, and C<notify>. When needed these methods will be called with the
+messages to be logged.
 
 This only works once for a given program, so you can't reset the policy in
 multiple modules and expect it to work.
 
 In addition to setting a global logger, a new logger object can be supplied
 when creating a specific C<TaskQueue> object.
+
+See L<cPanel::TaskQueue::Cookbook> for examples.
 
 =head1 DIAGNOSTICS
 

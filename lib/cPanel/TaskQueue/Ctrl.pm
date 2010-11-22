@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Ctrl;
 BEGIN {
-  $cPanel::TaskQueue::Ctrl::VERSION = '0.501';
+  $cPanel::TaskQueue::Ctrl::VERSION = '0.502';
 }
 
 # cpanel - cPanel/TaskQueue/Ctrl.pm               Copyright(c) 2009 cPanel, Inc.

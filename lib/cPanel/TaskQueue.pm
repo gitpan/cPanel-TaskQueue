@@ -1,6 +1,6 @@
 package cPanel::TaskQueue;
 BEGIN {
-  $cPanel::TaskQueue::VERSION = '0.501';
+  $cPanel::TaskQueue::VERSION = '0.502';
 }
 
 # cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2010 cPanel, Inc.
@@ -140,7 +140,7 @@ my $taskqueue_uuid = 'TaskQueue';
         my ( $class, $args_ref ) = @_;
         cPanel::StateFile->_throw( "Args parameter must be a hash reference\n" ) unless 'HASH' eq ref $args_ref;
 
-        # Deprecate the state_dir argument, replace with state_dir
+        # Deprecate the cache_dir argument, replace with state_dir
         $args_ref->{state_dir} ||= $args_ref->{cache_dir} if exists $args_ref->{cache_dir};
         cPanel::StateFile->_throw( "No state directory supplied.\n" ) unless exists $args_ref->{state_dir};
         cPanel::StateFile->_throw( "No queue name supplied.\n" ) unless exists $args_ref->{name};
@@ -434,7 +434,8 @@ my $taskqueue_uuid = 'TaskQueue';
             $processor = _get_task_processor( $task );
             unless ( $processor ) {
                 # TODO: log missing processor.
-                $self->warn( q{No processor found for '} . $task->command() . q{'.} );
+                $self->warn( q{No processor found for '} . $task->full_command() . q{'.} );
+                $guard->update_file();
                 return 1;
             }
             # Check for deferrals.
@@ -460,7 +461,7 @@ my $taskqueue_uuid = 'TaskQueue';
                 eval {
                     local $SIG{'ALRM'} = sub { die "time out reached\n"; };
                     $orig_alarm = alarm( $self->_timeout( $processor ) );
-                    $pid = $processor->process_task( $task->clone() );
+                    $pid = $processor->process_task( $task->clone(), $self->{disk_state}->get_logger() );
                     alarm $orig_alarm;
                     1;
                 } or do {
