@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Task;
 BEGIN {
-  $cPanel::TaskQueue::Task::VERSION = '0.502';
+  $cPanel::TaskQueue::Task::VERSION = '0.503';
 }
 
 use strict;

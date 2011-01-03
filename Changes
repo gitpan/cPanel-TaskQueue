@@ -1,5 +1,8 @@
 Revision history for cPanel-TaskQueue
 
+0.503     2011-01-03 10:49:47 America/Chicago
+       Fix a Fork/exception interaction in cPanel::TaskQueue::ChildProcessor
+       that results in multiple server processes running.
 0.502     2010-11-22 12:13:24 America/Chicago
        Pass the logger object from the CacheFile to the process_task routine
        on the processor. This way the processor can log properly.

@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::ChildProcessor;
 BEGIN {
-  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.502';
+  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.503';
 }
 
 use strict;
@@ -64,10 +64,16 @@ use cPanel::TaskQueue::Scheduler;
                     # Handle retries
                     $self->retry_task( $task );
                 };
-                $logger->throw( $@ ) if $@;
+                # Don't throw, we want to exit instead.
+                if( $@ ) {
+                    $logger->warn( $@ );
+                    exit 1;
+                }
             }
             else {
-                $logger->throw( $ex );
+                # Don't throw, we want to exit instead.
+                $logger->warn( $ex );
+                exit 1;
             }
         };
         exit 0;
