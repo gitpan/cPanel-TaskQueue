@@ -5,9 +5,10 @@ use Test::More tests => 10;
 use strict;
 use warnings;
 
+use File::Path ();
 use cPanel::TaskQueue::Scheduler;
 
-my $statedir = '/tmp';
+my $statedir = '/tmp/taskqueue';
 
 # In case the last test did not succeed.
 cleanup();
@@ -67,4 +68,5 @@ sub cleanup {
     foreach my $file ( 'tasks_sched.yaml', 'task_sched.yaml.lock' ) {
         unlink "$statedir/$file" if -e "$statedir/$file";
     }
+    File::Path::rmtree( $statedir ) if -e $statedir;
 }

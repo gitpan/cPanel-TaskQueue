@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Scheduler;
 BEGIN {
-  $cPanel::TaskQueue::Scheduler::VERSION = '0.503';
+  $cPanel::TaskQueue::Scheduler::VERSION = '0.503_01';
 }
 
 # cpanel - cPanel/TaskQueue/Scheduler.pm          Copyright(c) 2010 cPanel, Inc.

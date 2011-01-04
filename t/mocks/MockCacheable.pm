@@ -26,7 +26,7 @@ sub save_to_cache {
     print $fh "Save string: @{[ @$self{'save_called', 'load_called'} ]}";
 }
 
-1; # Magic true value required at end of module
+1;
 __END__
 
 =head1 NAME

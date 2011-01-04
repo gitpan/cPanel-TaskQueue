@@ -46,6 +46,8 @@ ok( !-e $lockname, "File not locked at this time." );
 
 # Test empty file case
 {
+    # Recreating file, so delete it first.
+    unlink $file;
     open( my $fh, '>', $file ) or die "Unable to create empty state file: $!";
     close( $fh );
 
@@ -54,7 +56,7 @@ ok( !-e $lockname, "File not locked at this time." );
 
     ok( !-z $file, "Cache file should be filled." );
 
-    ok( !$mock_obj->{load_called}, "File was empty, should not have loaded." );
+    is( $mock_obj->{load_called}, 0, "File was empty, should not have loaded." );
     is( $mock_obj->{save_called}, 2, "File was empty, should have saved." );
 
     ok( !-e $lockname, "File not locked at this time." );
@@ -72,7 +74,7 @@ ok( !-e $lockname, "File not locked at this time." );
     my $guard = $state->synch();
     ok( -e $lockname, "File is locked." );
 
-    ok( !$mock_obj->{load_called}, "memory up-to-date, don't load." );
+    is( $mock_obj->{load_called}, 0, "memory up-to-date, don't load." );
     $guard->update_file();
     is( $mock_obj->{save_called}, 3, "update calls save." );
 }

@@ -1,5 +1,12 @@
 Revision history for cPanel-TaskQueue
 
+0.503_01  2011-01-04 15:55:34 America/Chicago
+       Clean up errors found by CPANTESTERS.
+       Correct t/taskqueue_processor_checked_system.t to allow it to pass on
+       a Solaris or Windows system.
+       Fixed the same test to correctly handle a missing Test::Exception module.
+       Attempt to make statefile_load_save test more robust.
+       Make task_scheduler test more robust.
 0.503     2011-01-03 10:49:47 America/Chicago
        Fix a Fork/exception interaction in cPanel::TaskQueue::ChildProcessor
        that results in multiple server processes running.

@@ -1,8 +1,10 @@
 #!/usr/bin/perl
 
-use Test::More (eval { use Test::Exception; }
-        ? ('skip_all' => 'Test::Exception needed for this test.')
-        : (tests => 10)
+use Test::More ( $^O =~ /mswin/
+        ? ('skip_all' => 'checked_system tests do not work under Windows')
+        : eval "use Test::Exception; 1;"
+        ? (tests => 10)
+        : ('skip_all' => 'Test::Exception needed for this test.')
     );
 
 use strict;
@@ -50,5 +52,5 @@ is( $proc->checked_system( { logger => $logger, name => 'true run', cmd => 'true
 is( $logger->get_message, '', 'No warnings or messages' );
 
 $logger->clear();
-is( $proc->checked_system( { logger => $logger, name => 'false run', cmd => 'false' } ), 256, 'Program failed' );
-is( $logger->get_message, 'WARN:false run exited with value 1', 'Warning detected.' );
+isnt( $proc->checked_system( { logger => $logger, name => 'false run', cmd => 'false' } ), 0, 'Program failed' );
+like( $logger->get_message, qr/^WARN:false run exited with value [1-9]\d*$/, 'Warning detected (non-zero return).' );

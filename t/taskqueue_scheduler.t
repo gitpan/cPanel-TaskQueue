@@ -53,7 +53,13 @@ my @qid;
 my $time1 = time;
 
 push @qid, $sched->schedule_task( 'noop', {delay_seconds=>3} );
-is( $sched->seconds_until_next_task(), 3, 'Correct wait time.' ); # could fail if time stepped in the middle.
+my $next_secs = $sched->seconds_until_next_task();
+if( $next_secs == 3 or $next_secs == 2 ) {
+    pass( 'Correct wait time.' );
+}
+else {
+    is( $next_secs, 3, 'Correct wait time.' );
+}
 ok( $qid[0], 'task scheduled' );
 ok( $sched->is_task_scheduled( $qid[0] ), 'Scheduler thinks it is there' );
 my $t = $sched->peek_next_task();
