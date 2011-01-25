@@ -11,13 +11,14 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
+use File::Spec ();
 
 use Test::More tests => 17;
 use cPanel::TaskQueue::Scheduler;
 use cPanel::TaskQueue;
 use cPanel::TaskQueue::Task;
 
-my $statedir = '/tmp';
+my $statedir = File::Spec->tmpdir();
 
 # Processor designed to test retry logic.
 {

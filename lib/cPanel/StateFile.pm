@@ -1,6 +1,6 @@
 package cPanel::StateFile;
 BEGIN {
-  $cPanel::StateFile::VERSION = '0.503_01';
+  $cPanel::StateFile::VERSION = '0.503_02';
 }
 
 use strict;
@@ -27,7 +27,7 @@ my $pkg = __PACKAGE__;
 {
     package DefaultLogger;
 BEGIN {
-  $DefaultLogger::VERSION = '0.503_01';
+  $DefaultLogger::VERSION = '0.503_02';
 }
     sub new {
         my ($class) = @_;
@@ -134,7 +134,7 @@ sub import {
     {
         package cPanel::StateFile::Guard;
 BEGIN {
-  $cPanel::StateFile::Guard::VERSION = '0.503_01';
+  $cPanel::StateFile::Guard::VERSION = '0.503_02';
 }
 
         sub new {
@@ -184,6 +184,8 @@ BEGIN {
                 };
                 close $state_file->{file_handle};
                 $state_file->{file_handle} = undef;
+                # Update size and timestamp after close.
+                @{$state_file}{qw(file_size file_mtime)} = (stat( $state_file->{file_name} ))[7,9];
             }
             $state_file->{locker}->file_unlock( $self->{lock_file} );
             $self->{lock_file} = undef;

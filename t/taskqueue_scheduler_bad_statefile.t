@@ -6,17 +6,19 @@ use strict;
 use warnings;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
-
+use File::Spec ();
+use File::Path ();
 
 use cPanel::TaskQueue::Scheduler ( -logger => 'cPanel::FakeLogger' );
 
-my $statedir = '/tmp';
+my $statedir = File::Spec->tmpdir() . '/statedir';
 
 # In case the last test did not succeed.
 cleanup();
+File::Path::mkpath( $statedir );
 
 {
-    open( my $fh, '>', "$statedir/tasks_sched.yaml" );
+    open( my $fh, '>', "$statedir/tasks_sched.yaml" ) or die "Unable to create file: $!\n";
     print $fh "Bad YAML file.";
 }
 
@@ -32,11 +34,12 @@ cleanup();
 }
 
 cleanup();
+File::Path::mkpath( $statedir );
 
 {
     use YAML::Syck ();
 
-    open( my $fh, '>', "$statedir/tasks_sched.yaml" );
+    open( my $fh, '>', "$statedir/tasks_sched.yaml" ) or die "Unable to create file: $!\n";
     print $fh YAML::Syck::Dump( 'TaskScheduler', 3.1415, {} );
 }
 
@@ -51,7 +54,5 @@ cleanup();
 
 # Clean up after myself
 sub cleanup {
-    foreach my $file ( 'tasks_sched.yaml', 'tasks_sched.yaml.broken', 'tasks_sched.yaml.lock' ) {
-        unlink "$statedir/$file" if -e "$statedir/$file";
-    }
+    File::Path::rmtree( $statedir );
 }

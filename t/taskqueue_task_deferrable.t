@@ -7,17 +7,27 @@ use warnings;
 
 use cPanel::TaskQueue;
 use File::Path ();
+use File::Spec ();
 
-my $state_dir = '/tmp/queue';
+my $state_dir = File::Spec->tmpdir() . '/queue';
 
 File::Path::rmtree( $state_dir );
+
+sub make_process_wait {
+    open my $fh, '>>', "$state_dir/flag" or die "Unable to create flag file: $!\n";
+    close( $fh );
+}
+
+sub clear_process_wait { unlink "$state_dir/flag"; }
 
 {
     package MockTaskProcessor;
     use base 'cPanel::TaskQueue::ChildProcessor';
 
     sub _do_child_task {
-        sleep( 1 );
+        do {
+            select( undef, undef, undef, 0.25 );  # 1/4 second sleep
+        } while( -e "$state_dir/flag" );
         return;
     }
 
@@ -38,6 +48,7 @@ File::Path::rmtree( $state_dir );
         name      => 'test',
     } );
 
+    make_process_wait();
     my @tasks = (
         $queue->queue_task( 'test' ),
         $queue->queue_task( 'test a' ),
@@ -64,6 +75,7 @@ File::Path::rmtree( $state_dir );
     is( $queue->how_many_deferred(),   0, "$label (2 step): deferred count is correct" );
     is( $queue->how_many_in_process(), 2, "$label (2 step): process count is correct" );
 
+    clear_process_wait();
     File::Path::rmtree( $state_dir );
 }
 
@@ -76,6 +88,7 @@ File::Path::rmtree( $state_dir );
         name      => 'test',
     } );
 
+    make_process_wait();
     my @tasks = (
         $queue->queue_task( 'test a' ),
         $queue->queue_task( 'test a d' ),
@@ -108,7 +121,9 @@ File::Path::rmtree( $state_dir );
     is( $queue->how_many_deferred(),   3, "$label (2 step): deferred count is correct" );
     is( $queue->how_many_in_process(), 1, "$label (2 step): process count is correct" );
 
-    sleep( 2 ); # Clear the processing task
+    clear_process_wait();
+    sleep( 1 ); # Clear the processing task
+    make_process_wait();
     $queue->process_next_task();
 
     # Deferred tasks are moved to waiting queue, and a new task begins processing
@@ -130,6 +145,7 @@ File::Path::rmtree( $state_dir );
     is( $queue->how_many_deferred(),   2, "$label (3 step): deferred count is correct" );
     is( $queue->how_many_in_process(), 1, "$label (3 step): process count is correct" );
 
+    clear_process_wait();
     File::Path::rmtree( $state_dir );
 }
 
@@ -142,6 +158,7 @@ File::Path::rmtree( $state_dir );
         name      => 'test',
     } );
 
+    make_process_wait();
     my @tasks = (
         $queue->queue_task( 'test a' ),
         $queue->queue_task( 'test a d' ),
@@ -168,6 +185,7 @@ File::Path::rmtree( $state_dir );
     is( $queue->how_many_deferred(),   2, "$label (2 step): deferred count is correct" );
     is( $queue->how_many_in_process(), 2, "$label (2 step): process count is correct" );
 
+    clear_process_wait();
     File::Path::rmtree( $state_dir );
 }
 

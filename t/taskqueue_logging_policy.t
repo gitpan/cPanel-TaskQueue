@@ -6,6 +6,7 @@
 use FindBin;
 use lib "$FindBin::Bin/mocks";
 use File::Path ();
+use File::Spec ();
 
 use Test::More tests => 10;
 my $logger;
@@ -22,7 +23,7 @@ like( $@, qr/Policies already/, 'Cannot reset policies to defaults.' );
 eval "use cPanel::TaskQueue ();";
 ok( !$@, 'Can reload with import turned off.' );
 
-my $dir = '/tmp';
+my $dir = File::Spec->tmpdir();
 
 # clean up if last run failed.
 cleanup();

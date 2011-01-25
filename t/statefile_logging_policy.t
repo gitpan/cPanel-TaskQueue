@@ -6,6 +6,7 @@
 use FindBin;
 use lib "$FindBin::Bin/mocks";
 use File::Path ();
+use File::Spec ();
 use cPanel::FakeLogger;
 
 use Test::More tests => 4;
@@ -24,7 +25,7 @@ like( $@, qr/state filename/, 'Cannot create StateFile without parameters' );
 like( ($logger->get_msgs())[0], qr/throw.*?state filename/, 'Logged correctly.' );
 
 # Put a logger on the specific StateFile
-my $cfile = '/tmp/wade.state';
+my $cfile = File::Spec->tmpdir() . '/wade.state';
 
 my $logger2 = cPanel::FakeLogger->new;
 eval {

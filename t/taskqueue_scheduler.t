@@ -11,11 +11,12 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
+use File::Spec ();
 
 use Test::More tests => 84;
 use cPanel::TaskQueue::Scheduler;
 
-my $statedir = '/tmp';
+my $statedir = File::Spec->tmpdir();
 
 # In case the last test did not succeed.
 cleanup();

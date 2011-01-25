@@ -5,6 +5,7 @@
 
 use FindBin;
 use lib "$FindBin::Bin/mocks";
+use File::Spec ();
 use File::Path ();
 
 use Test::More tests => 7;
@@ -22,10 +23,11 @@ like( $@, qr/Policies already/, 'Cannot reset policies to defaults.' );
 eval "use cPanel::TaskQueue::Scheduler ();";
 ok( !$@, 'Can reload with import turned off.' );
 
-my $dir = '/tmp';
+my $dir = File::Spec->tmpdir() . '/statefile';
 
 # clean up if last run failed.
 cleanup();
+File::Path::mkpath( $dir );
 
 # test bad new calls.
 eval {
@@ -44,9 +46,9 @@ ok( !$ts->schedule_task( $task, { delay_seconds=>1} ), 'Finished trying to queue
 like( ($logger->get_msgs())[0], qr/info.*?0 retries/, 'Infoed correctly.' );
 $logger->reset_msgs();
 
+cleanup();
+
 # Discard temporary files that we don't need any more.
 sub cleanup {
-    foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.lock' ) {
-        unlink "$dir/$file" if -e "$dir/$file";
-    }
+    File::Path::rmtree( $dir );
 }

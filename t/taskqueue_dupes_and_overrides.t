@@ -6,13 +6,14 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
+use File::Spec ();
 
 use Test::More tests => 39;
 use cPanel::TaskQueue;
 use cPanel::TaskQueue::Processor;
 
-my $statedir = '/tmp';
-my $missing_dir = '/tmp/task_queue_test';
+my $statedir = File::Spec->tmpdir() . '/statedir';
+my $missing_dir = File::Spec->tmpdir() . '/task_queue_test';
 
 {
     package MockProcessor;

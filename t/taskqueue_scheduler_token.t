@@ -5,10 +5,11 @@ use Test::More tests => 10;
 use strict;
 use warnings;
 
+use File::Spec ();
 use File::Path ();
 use cPanel::TaskQueue::Scheduler;
 
-my $statedir = '/tmp/taskqueue';
+my $statedir = File::Spec->tmpdir() . '/taskqueue';
 
 # In case the last test did not succeed.
 cleanup();

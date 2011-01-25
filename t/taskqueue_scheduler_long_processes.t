@@ -11,11 +11,13 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
+use File::Spec ();
+use File::Path ();
 
 use Test::More tests => 18;
 use cPanel::TaskQueue::Scheduler;
 
-my $statedir = '/tmp';
+my $statedir = File::Spec->tmpdir() . '/statedir';
 
 {
     package MockQueue;
@@ -49,6 +51,7 @@ SKIP:
 
     # In case the last test did not succeed.
     cleanup();
+    File::Path::mkpath( $statedir );
 
     my $sched = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', state_dir => $statedir } );
     isa_ok( $sched, 'cPanel::TaskQueue::Scheduler', 'Correct object built.' );
@@ -93,6 +96,8 @@ SKIP:
 }
 
 {
+    File::Path::mkpath( $statedir );
+
     my $sched = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', state_dir => $statedir } );
     ok( $sched->schedule_task( 'noop 0', {at_time=>time} ), 'command scheduled for now.' );
 
@@ -107,7 +112,5 @@ SKIP:
 
 # Clean up after myself
 sub cleanup {
-    foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.lock' ) {
-        unlink "$statedir/$file" if -e "$statedir/$file";
-    }
+    File::Path::rmtree( $statedir );
 }

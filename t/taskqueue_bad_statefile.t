@@ -5,15 +5,18 @@ use Test::More tests => 7;
 use strict;
 use warnings;
 use FindBin;
+use File::Spec ();
+use File::Path ();
 use lib "$FindBin::Bin/mocks";
 
 
 use cPanel::TaskQueue ( -logger => 'cPanel::FakeLogger' );
 
-my $statedir = '/tmp';
+my $statedir = File::Spec->tmpdir() . '/state_test';
 
 # In case the last test did not succeed.
 cleanup();
+File::Path::mkpath( $statedir );
 
 {
     open( my $fh, '>', "$statedir/tasks_queue.yaml" );
@@ -32,6 +35,7 @@ cleanup();
 }
 
 cleanup();
+File::Path::mkpath( $statedir );
 
 {
     use YAML::Syck ();
@@ -51,7 +55,5 @@ cleanup();
 
 # Clean up after myself
 sub cleanup {
-    foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.broken', 'tasks_queue.yaml.lock' ) {
-        unlink "$statedir/$file" if -e "$statedir/$file";
-    }
+    File::Path::rmtree( $statedir );
 }

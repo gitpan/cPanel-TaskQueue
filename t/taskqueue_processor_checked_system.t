@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use Test::More ( $^O =~ /mswin/
+use Test::More ( $^O =~ /mswin/i
         ? ('skip_all' => 'checked_system tests do not work under Windows')
         : eval "use Test::Exception; 1;"
         ? (tests => 10)

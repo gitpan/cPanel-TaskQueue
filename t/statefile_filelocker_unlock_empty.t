@@ -11,6 +11,7 @@ use FindBin;
 use lib "$FindBin::Bin/mocks";
 
 use POSIX qw(strftime);
+use File::Spec ();
 use Test::More tests=>4;
 
 use cPanel::FakeLogger;
@@ -20,7 +21,7 @@ use cPanel::StateFile::FileLocker ();
 # I am peeking inside the class in order to test this functionality. This access
 #  may be removed or changed at any time.
 
-my $filename = "/tmp/fake.file";
+my $filename = File::Spec->tmpdir() . '/fake.file';
 my $lockfile = "$filename.lock";
 
 my $logger = cPanel::FakeLogger->new;

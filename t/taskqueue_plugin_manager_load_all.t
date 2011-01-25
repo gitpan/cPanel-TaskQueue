@@ -2,10 +2,15 @@
 
 use FindBin;
 use lib "$FindBin::Bin/mocks";
-BEGIN { mkdir "/tmp/fake_plugins"; }
-use lib "/tmp/fake_plugins";
+use File::Spec ();
 use File::Path ();
-END { File::Path::rmtree "/tmp/fake_plugins"; }
+my $plugins;
+BEGIN {
+    $plugins = File::Spec->tmpdir() . '/fake_plugins';
+    File::Path::mkpath $plugins;
+}
+use lib $plugins;
+END { File::Path::rmtree $plugins; }
 
 use cPanel::TaskQueue::PluginManager ();
 
@@ -33,12 +38,12 @@ like( $@, qr/No namespace/, 'Must supply a directory _list_.' );
 # Capture STDERR so Logger doesn't go to screen.
 
 # Capture STDERR so Logger doesn't go to screen.
-my $tmp_dumpfile = '/tmp/qpm_test.log';
+my $tmp_dumpfile = File::Spec->tmpdir() . '/qpm_test.log';
 open( my $olderr, '>&STDERR' ) or die "Can't dupe STDERR: $!";
 close( STDERR ); open( STDERR, '>', $tmp_dumpfile ) or die "Unable to redirect STDERR: $!";
 
 cPanel::TaskQueue::PluginManager::load_all_plugins(
-    directories => [ $plugindir, '/tmp/fake_plugins' ],
+    directories => [ $plugindir, $plugins ],
     namespaces => [ 'cPanel::FakeTasks', 'cPanel::OtherTasks' ],
 );
 
@@ -65,7 +70,7 @@ is_deeply( \@loaded, \@expected, 'Loaded list matches expectations.' );
 # Verify that reloading is safe.
 {
     # Capture STDERR so Logger doesn't go to screen.
-    my $tmp_dumpfile = '/tmp/qpm_test.log';
+    my $tmp_dumpfile = File::Spec->tmpdir() . '/qpm_test.log';
     open( my $olderr, '>&STDERR' ) or die "Can't dupe STDERR: $!";
     close( STDERR ); open( STDERR, '>', $tmp_dumpfile ) or die "Unable to redirect STDERR: $!";
 

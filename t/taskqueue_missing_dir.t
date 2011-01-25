@@ -7,8 +7,9 @@ use strict;
 
 use Test::More tests => 2;
 use cPanel::TaskQueue;
+use File::Spec ();
 
-my $missing_dir = '/tmp/task_queue_test';
+my $missing_dir = File::Spec->tmpdir() . '/task_queue_test';
 
 # In case the last test did not succeed.
 cleanup();

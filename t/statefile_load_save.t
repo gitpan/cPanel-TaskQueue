@@ -6,12 +6,13 @@
 use FindBin;
 use lib "$FindBin::Bin/mocks";
 use File::Path ();
+use File::Spec ();
 
 use Test::More tests => 24;
 use cPanel::StateFile;
 use MockCacheable;
 
-my $dir = '/tmp/state_test';
+my $dir = File::Spec->tmpdir() . '/state_test';
 my $file = "$dir/state_dir/state_file";
 my $lockname = "$file.lock";
 

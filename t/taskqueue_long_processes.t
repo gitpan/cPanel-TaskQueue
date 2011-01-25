@@ -11,11 +11,13 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
+use File::Path ();
+use File::Spec ();
 
 use Test::More tests => 34;
 use cPanel::TaskQueue;
 
-my $statedir = '/tmp';
+my $statedir = File::Spec->tmpdir() . '/statedir';
 
 {
     package SleepTask;
@@ -35,6 +37,7 @@ SKIP:
 
     # In case the last test did not succeed.
     cleanup();
+    File::Path::mkpath( $statedir );
 
     cPanel::TaskQueue->register_task_processor( 'sleep', SleepTask->new() );
 
@@ -87,7 +90,5 @@ SKIP:
 
 # Clean up after myself
 sub cleanup {
-    foreach my $file ( 'tasks_queue.yaml', 'tasks_queue.yaml.lock' ) {
-        unlink "$statedir/$file" if -e "$statedir/$file";
-    }
+    File::Path::rmtree( $statedir );
 }

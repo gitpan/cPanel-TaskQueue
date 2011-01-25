@@ -19,7 +19,7 @@ my %module_build_args = (
     'cPanel, Inc. <cpan@cpanel.net>'
   ],
   'dist_name' => 'cPanel-TaskQueue',
-  'dist_version' => '0.503_01',
+  'dist_version' => '0.503_02',
   'license' => 'perl',
   'module_name' => 'cPanel::TaskQueue',
   'recommends' => {},

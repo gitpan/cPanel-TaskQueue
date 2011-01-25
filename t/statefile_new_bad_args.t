@@ -4,9 +4,10 @@ use Test::More tests => 6;
 
 use strict;
 use warnings;
+use File::Spec ();
 use cPanel::StateFile;
 
-my $dir = '/tmp/state_test';
+my $dir = File::Spec->tmpdir() . '/state_test';
 my $file = "$dir/state_dir/state_file";
 
 eval {

@@ -1,5 +1,7 @@
 Revision history for cPanel-TaskQueue
 
+0.503_02  2011-01-25 12:12:37 America/Chicago
+       More CPANTESTERS cleanup.
 0.503_01  2011-01-04 15:55:34 America/Chicago
        Clean up errors found by CPANTESTERS.
        Correct t/taskqueue_processor_checked_system.t to allow it to pass on
