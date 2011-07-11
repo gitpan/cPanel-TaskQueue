@@ -6,13 +6,13 @@
 use FindBin;
 use lib "$FindBin::Bin/mocks";
 use File::Path ();
-use File::Spec ();
 
 use Test::More tests => 24;
 use cPanel::StateFile;
 use MockCacheable;
 
-my $dir = File::Spec->tmpdir() . '/state_test';
+my $tmpdir = './tmp';
+my $dir = "$tmpdir/state_test";
 my $file = "$dir/state_dir/state_file";
 my $lockname = "$file.lock";
 
@@ -21,10 +21,12 @@ my $lockname = "$file.lock";
 
 # clean up if last run failed.
 cleanup();
+File::Path::mkpath( $tmpdir ) or die "Unable to create tmpdir: $!";
 
 # test valid creation
 my $mock_obj = MockCacheable->new;
 
+sleep 1; # match times for testing.
 my $state = cPanel::StateFile->new( { state_file => $file, data_obj => $mock_obj } );
 isa_ok( $state, 'cPanel::StateFile' );
 
@@ -105,5 +107,5 @@ cleanup();
 sub cleanup {
     unlink $file if -e $file;
     unlink $lockname if -e $lockname;
-    File::Path::rmtree( $dir ) if -d $dir;
+    File::Path::rmtree( $tmpdir ) if -d $tmpdir;
 }
