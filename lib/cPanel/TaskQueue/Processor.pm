@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Processor;
 BEGIN {
-  $cPanel::TaskQueue::Processor::VERSION = '0.503_03';
+  $cPanel::TaskQueue::Processor::VERSION = '0.503_04';
 }
 
 use strict;
@@ -106,7 +106,7 @@ use strict;
 {
     package cPanel::TaskQueue::Processor::CodeRef;
 BEGIN {
-  $cPanel::TaskQueue::Processor::CodeRef::VERSION = '0.503_03';
+  $cPanel::TaskQueue::Processor::CodeRef::VERSION = '0.503_04';
 }
     use base 'cPanel::TaskQueue::Processor';
 
