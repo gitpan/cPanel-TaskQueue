@@ -25,4 +25,4 @@ requires:
   Text::Wrap: 0
   Unix::PID: 0.21
   YAML::Syck: 0
-version: 0.503_04
+version: 0.504
