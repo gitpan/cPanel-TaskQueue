@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::PluginManager;
 BEGIN {
-  $cPanel::TaskQueue::PluginManager::VERSION = '0.504';
+  $cPanel::TaskQueue::PluginManager::VERSION = '0.600';
 }
 
 use strict;

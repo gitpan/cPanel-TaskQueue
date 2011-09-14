@@ -8,6 +8,7 @@ use Module::Build 0.3601;
 my %module_build_args = (
   'build_requires' => {
     'Carp' => '0',
+    'Cwd' => '0',
     'FindBin' => '0',
     'Test::More' => '0'
   },
@@ -19,7 +20,7 @@ my %module_build_args = (
     'cPanel, Inc. <cpan@cpanel.net>'
   ],
   'dist_name' => 'cPanel-TaskQueue',
-  'dist_version' => '0.504',
+  'dist_version' => '0.600',
   'license' => 'perl',
   'module_name' => 'cPanel::TaskQueue',
   'recommends' => {},
@@ -30,6 +31,7 @@ my %module_build_args = (
     'File::Spec' => '0',
     'Getopt::Long' => '0',
     'POSIX' => '0',
+    'Storable' => '0',
     'Term::ReadLine' => '0',
     'Text::Wrap' => '0',
     'Unix::PID' => '0.21',

@@ -1,9 +1,9 @@
 package cPanel::TaskQueue::Ctrl;
 BEGIN {
-  $cPanel::TaskQueue::Ctrl::VERSION = '0.504';
+  $cPanel::TaskQueue::Ctrl::VERSION = '0.600';
 }
 
-# cpanel - cPanel/TaskQueue/Ctrl.pm               Copyright(c) 2009 cPanel, Inc.
+# cpanel - cPanel/TaskQueue/Ctrl.pm               Copyright(c) 2011 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 
@@ -15,6 +15,11 @@ use cPanel::TaskQueue::Scheduler     ();
 use cPanel::TaskQueue::PluginManager ();
 use Text::Wrap                       ();
 
+my %format = (
+    storable => 'cPanel::TQSerializer::Storable',
+    yaml     => 'cPanel::TQSerializer::YAML',
+);
+
 my @required = qw(qdir qname);
 my %validate = (
     'qdir'   => sub { return -d $_[0]; },
@@ -23,6 +28,7 @@ my %validate = (
     'sname'  => sub { return defined $_[0] && length $_[0]; },
     'logger' => sub { return 1; },
     'out'    => sub { return 1; },
+    'serial' => sub { return exists $format{lc $_[0]}; },
 );
 
 my %commands = (
@@ -89,6 +95,13 @@ my %commands = (
         synopsis => 'status',
         help     => '    Print the status of the Task Queue and Scheduler.',
     },
+    convert => {
+        code     => \&convert_state_files,
+        synopsis => 'convert {newformat}',
+        help     => '    Convert the TaskQueue and Scheduler state files from the current format
+    to the newly specified format. Valid strings for the format are "storable" or
+    "yaml".'
+    }
 );
 
 sub new {
@@ -123,7 +136,7 @@ sub run {
 sub synopsis {
     my ( $self, $cmd ) = @_;
 
-    if ($cmd) {
+    if ($cmd && exists $commands{$cmd}) {
         return $commands{$cmd}->{'synopsis'}, '';
     }
     return map { $commands{$_}->{'synopsis'}, '' } sort keys %commands;
@@ -131,7 +144,7 @@ sub synopsis {
 
 sub help {
     my ( $self, $cmd ) = @_;
-    if ($cmd) {
+    if ($cmd && exists $commands{$cmd}) {
         return @{ $commands{$cmd} }{ 'synopsis', 'help' }, '';
     }
     return map { @{ $commands{$_} }{ 'synopsis', 'help' }, '' } sort keys %commands;
@@ -141,8 +154,10 @@ sub _get_queue {
     my ($self) = @_;
     return cPanel::TaskQueue->new(
         {
-            name => $self->{qname}, state_dir => $self->{qdir},
+            name => $self->{qname},
+            state_dir => $self->{qdir},
             ( exists $self->{logger} ? ( logger => $self->{logger} ) : () ),
+            ( defined $self->{serial} ? ( serial => $format{lc $self->{serial}} ) : () ),
         }
     );
 }
@@ -156,8 +171,10 @@ sub _get_scheduler {
     return undef unless exists $self->{sdir};    ## no critic (ProhibitExplicitReturnUndef)
     return cPanel::TaskQueue::Scheduler->new(
         {
-            name => $self->{sname}, state_dir => $self->{sdir},
+            name => $self->{sname},
+            state_dir => $self->{sdir},
             ( exists $self->{logger} ? ( logger => $self->{logger} ) : () ),
+            ( defined $self->{serial} ? ( serial => $format{lc $self->{serial}} ) : () ),
         }
     );
 }
@@ -404,6 +421,40 @@ sub queue_status {
     print $fh "\n";
 }
 
+sub convert_state_files {
+    my ($fh, $queue, $sched, $fmt) = @_;
+
+    $fmt = lc $fmt;
+    unless ( exists $format{$fmt} ) {
+        print $fh "'$fmt' is not a valid format.\n";
+        return;
+    }
+    my $new_serial = $format{$fmt};
+    eval "use $new_serial;";
+    die "Unable to load serializer module '$new_serial': $@" if $@;
+    _convert_a_state_file( $queue, $new_serial );
+    _convert_a_state_file( $sched, $new_serial );
+    print $fh "Since the format of the state files have changed, we cannot continue. Reload program specifying new serializer.\n";
+    die "Must Restart\n";
+}
+
+sub _convert_a_state_file {
+    my ($q, $new_serial) = @_;
+
+    my $curr_serial = $q->_serializer();
+    if( $new_serial ne $curr_serial ) {
+        my $curr_state_file = $q->_state_file();
+        my $new_state_file = $new_serial->filename( substr( $curr_state_file, 0, rindex( $curr_state_file, '.' ) ) );
+        open my $ifh, '<', $curr_state_file or die "Unable to read '$curr_state_file': $!\n";
+        open my $ofh, '>', $new_state_file or die "Unable to write '$new_state_file': $!\n";
+        $new_serial->save( $ofh, $curr_serial->load( $ifh ) );
+        close $ofh;
+        close $ifh;
+        unlink "$curr_state_file.orig";
+        rename $curr_state_file, "$curr_state_file.orig";
+    }
+}
+
 sub _print_task {
     my ( $fh, $task ) = @_;
     print $fh '[', $task->uuid, ']: ', $task->full_command, "\n";
@@ -425,7 +476,7 @@ sub _verbosely_print_task {
 
 __END__
 
-Copyright (c) 2010, cPanel, Inc. All rights reserved.
+Copyright (c) 2011, cPanel, Inc. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.

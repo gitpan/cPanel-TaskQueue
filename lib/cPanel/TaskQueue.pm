@@ -1,9 +1,9 @@
 package cPanel::TaskQueue;
 BEGIN {
-  $cPanel::TaskQueue::VERSION = '0.504';
+  $cPanel::TaskQueue::VERSION = '0.600';
 }
 
-# cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2010 cPanel, Inc.
+# cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2011 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 #
@@ -14,7 +14,6 @@ BEGIN {
 
 use strict;
 #use warnings;
-use YAML::Syck             ();     # Data Serialization
 use cPanel::TaskQueue::Task();
 use cPanel::TaskQueue::Processor();
 use cPanel::StateFile      ();
@@ -39,6 +38,7 @@ if ( !$WNOHANG ) {
 # object and polymorphism into the mix.
 
 my $are_policies_set = 0;
+my $the_serializer;
 
 #
 # This method allows changing the policies for logging and locking.
@@ -51,8 +51,13 @@ sub import {
     while ( @_ ) {
         my ($policy,$module) = splice( @_, 0, 2 );
         my @methods = ();
+        my @sf_policies;
         if ( '-logger' eq $policy ) {
             cPanel::StateFile->import( '-logger' => $module );
+        }
+        elsif( '-serializer' eq $policy ) {
+            _load_serializer_module( $module );
+            $the_serializer = $module;
         }
         else {
             die "Unrecognized policy '$policy'\n";
@@ -60,6 +65,34 @@ sub import {
     }
     $are_policies_set = 1;
     return 1;
+}
+
+sub _load_serializer_module {
+    my ($module) = @_;
+    die "Supplied serializer must be a module name.\n" if ref $module;
+    die "'$module' does not look like a serializer" unless $module =~ m{^\w+(?:::\w+)*$};
+    eval "use $module;"; ## no critic (ProhibitStringyEval)
+    die $@ if $@;
+    die "Supplied serializer module '$module' does not support the correct interface."
+        unless _valid_serializer( $module );
+    return;
+}
+
+sub _valid_serializer {
+    my ($serializer) = @_;
+    foreach my $method ( qw/load save filename/ ) {
+        return unless eval { $serializer->can( $method ) };
+    }
+    return 1;
+}
+
+sub _get_serializer {
+    unless ( defined $the_serializer ) {
+        eval 'use cPanel::TQSerializer::Storable;';  ## no crititc (ProhibitStringyEval)
+        cPanel::StateFile->_throw( @_ ) if $@;
+        $the_serializer = 'cPanel::TQSerializer::Storable';
+    }
+    return $the_serializer;
 }
 
 # Replacement for List::Util::first, so I don't need to bring in the whole module.
@@ -145,6 +178,12 @@ my $taskqueue_uuid = 'TaskQueue';
         cPanel::StateFile->_throw( "No state directory supplied.\n" ) unless exists $args_ref->{state_dir};
         cPanel::StateFile->_throw( "No queue name supplied.\n" ) unless exists $args_ref->{name};
 
+        my $serializer;
+        if ( defined $args_ref->{serial} ) {
+            _load_serializer_module( $args_ref->{serial} );
+            $serializer = $args_ref->{serial};
+        }
+        $serializer ||= _get_serializer();
         # TODO: Do I want to sanity check the arguments?
         my $self = bless {
             queue_name            => $args_ref->{name},
@@ -152,7 +191,7 @@ my $taskqueue_uuid = 'TaskQueue';
             max_task_timeout      => 300,
             max_in_process        => 2,
             default_child_timeout => 3600,
-            disk_state_file       => "$args_ref->{state_dir}/$args_ref->{name}_queue.yaml",
+            disk_state_file       => $serializer->filename( "$args_ref->{state_dir}/$args_ref->{name}_queue" ),
             next_id               => 1,
             queue_waiting         => [],
             processing_list       => [],
@@ -160,6 +199,7 @@ my $taskqueue_uuid = 'TaskQueue';
             disk_state            => undef,
             defer_obj             => undef,
             paused                => 0,
+            serializer            => $serializer,
         }, $class;
 
         # Make a disk file to track the object.
@@ -213,16 +253,29 @@ my $taskqueue_uuid = 'TaskQueue';
         my $self = shift;
         return $self->{disk_state} ? $self->{disk_state}->info( @_ ) : undef;
     }
+
+    # -------------------------------------------------------
+    # Pseudo-private methods. Should not be called except under unusual circumstances.
+    sub _serializer {
+        my ($self) = @_;
+        return $self->{serializer};
+    }
+
+    sub _state_file {
+        my ($self) = @_;
+        return $self->{disk_state_file};
+    }
+
     # -------------------------------------------------------
     # Public methods
     sub load_from_cache {
         my ($self, $fh) = @_;
 
         local $/;
-        my ($magic, $version, $meta) = YAML::Syck::Load( scalar <$fh> );
+        my ($magic, $version, $meta) = $self->_serializer()->load( $fh );
 
-        $self->throw( 'Not a recognized TaskQueue state file.' ) unless $magic eq $FILETYPE;
-        $self->throw( 'Invalid version of TaskQueue state file.' ) unless $version eq $CACHE_VERSION;
+        $self->throw( 'Not a recognized TaskQueue state file.' ) unless defined $magic and $magic eq $FILETYPE;
+        $self->throw( 'Invalid version of TaskQueue state file.' ) unless defined $version and $version eq $CACHE_VERSION;
 
         # Next id should continue increasing.
         #   (We might want to deal with wrap-around at some point.)
@@ -265,7 +318,7 @@ my $taskqueue_uuid = 'TaskQueue';
             paused           => ( $self->{paused} ? 1 : 0 ),
             defer_obj        => $self->{defer_obj},
         };
-        return print $fh YAML::Syck::Dump( $FILETYPE, $CACHE_VERSION, $meta );
+        return $self->_serializer()->save( $fh, $FILETYPE, $CACHE_VERSION, $meta );
     }
 
     sub queue_task {

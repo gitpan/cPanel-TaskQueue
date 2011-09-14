@@ -13,6 +13,7 @@ my %WriteMakefileArgs = (
   'AUTHOR' => 'cPanel, Inc. <cpan@cpanel.net>',
   'BUILD_REQUIRES' => {
     'Carp' => '0',
+    'Cwd' => '0',
     'FindBin' => '0',
     'Test::More' => '0'
   },
@@ -33,12 +34,13 @@ my %WriteMakefileArgs = (
     'File::Spec' => '0',
     'Getopt::Long' => '0',
     'POSIX' => '0',
+    'Storable' => '0',
     'Term::ReadLine' => '0',
     'Text::Wrap' => '0',
     'Unix::PID' => '0.21',
     'YAML::Syck' => '0'
   },
-  'VERSION' => '0.504',
+  'VERSION' => '0.600',
   'test' => {
     'TESTS' => 't/*.t'
   }
