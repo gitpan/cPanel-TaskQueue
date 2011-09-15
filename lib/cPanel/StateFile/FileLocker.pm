@@ -1,6 +1,6 @@
 package cPanel::StateFile::FileLocker;
 BEGIN {
-  $cPanel::StateFile::FileLocker::VERSION = '0.600';
+  $cPanel::StateFile::FileLocker::VERSION = '0.601';
 }
 
 #use warnings;

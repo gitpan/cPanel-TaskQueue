@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::ChildProcessor;
 BEGIN {
-  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.600';
+  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.601';
 }
 
 use strict;

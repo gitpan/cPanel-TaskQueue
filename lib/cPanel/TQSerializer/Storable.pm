@@ -1,6 +1,6 @@
 package cPanel::TQSerializer::Storable;
 BEGIN {
-  $cPanel::TQSerializer::Storable::VERSION = '0.600';
+  $cPanel::TQSerializer::Storable::VERSION = '0.601';
 }
 
 # cpanel - cPanel/TQSerializer/Storable.pm        Copyright(c) 2011 cPanel, Inc.

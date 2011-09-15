@@ -1,6 +1,6 @@
 package cPanel::TQSerializer::YAML;
 BEGIN {
-  $cPanel::TQSerializer::YAML::VERSION = '0.600';
+  $cPanel::TQSerializer::YAML::VERSION = '0.601';
 }
 
 # cpanel - cPanel/TQSerializer/YAML.pm            Copyright(c) 2011 cPanel, Inc.

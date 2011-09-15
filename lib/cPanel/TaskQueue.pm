@@ -1,6 +1,6 @@
 package cPanel::TaskQueue;
 BEGIN {
-  $cPanel::TaskQueue::VERSION = '0.600';
+  $cPanel::TaskQueue::VERSION = '0.601';
 }
 
 # cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2011 cPanel, Inc.
@@ -123,8 +123,20 @@ my $taskqueue_uuid = 'TaskQueue';
     sub get_default_child_timeout { return $_[0]->{default_child_timeout}; }
 
     # Processing pausing
-    sub pause_processing          { $_[0]->{paused} = 1; return; }
-    sub resume_processing         { $_[0]->{paused} = 0; return; }
+    sub pause_processing {
+        my ($self) = @_;
+        my $guard = $self->{disk_state}->synch();
+        $self->{paused} = 1;
+        $guard->update_file();
+        return;
+    }
+    sub resume_processing {
+        my ($self) = @_;
+        my $guard = $self->{disk_state}->synch();
+        $self->{paused} = 0;
+        $guard->update_file();
+        return;
+    }
     sub is_paused                 { return $_[0]->{paused} || 0; }
 
     # --------------------------------------
