@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Task;
 BEGIN {
-  $cPanel::TaskQueue::Task::VERSION = '0.602';
+  $cPanel::TaskQueue::Task::VERSION = '0.603';
 }
 
 # cpanel - cPanel/TaskQueue/Task.pm               Copyright(c) 2012 cPanel, Inc.
@@ -35,6 +35,8 @@ use strict;
 
 # Namespace for the ids created by this class.
 my $task_uuid = 'TaskQueue-Task';
+
+my @fields = qw/_command _argstring _args _timestamp _uuid _child_timeout _started _pid _retries _userdata/;
 
 # These methods are intended to help document the importance of the message and to supply 'seam' that
 #   could be used to modify the logging behavior of the TaskQueue.
@@ -102,6 +104,34 @@ sub new {
     }, $class;
 }
 
+# Validate supplied hash bless into class if valid
+sub reconstitute {
+    my ( $class, $hash ) = @_;
+
+    return unless defined $hash;
+    return $hash if ref $hash eq $class;
+    $class->_throw('Argument is not a hash reference.') unless ref {} eq ref $hash;
+
+    foreach my $field (@fields) {
+        $class->_throw("Missing '$field' field in supplied hash") unless exists $hash->{$field};
+        next if $field eq '_pid' or $field eq '_started';
+        $class->_throw("Field '$field' has no value") unless defined $hash->{$field};
+    }
+    $class->_throw(q{The '_args' field must be an array}) unless ref [] eq ref $hash->{_args};
+
+    my %object;
+    foreach my $field (@fields) {
+        if ( ref [] eq ref $hash->{$field} ) {
+            $object{$field} = [ @{ $hash->{$field} } ];
+        }
+        else {
+            $object{$field} = $hash->{$field};
+        }
+    }
+
+    return bless \%object, $class;
+}
+
 # Make a copy of the task description.
 # Makes a one-level deep copy of the hash. If this structure is ever extended
 # to support more complex attributes, this method will need to change.
@@ -114,7 +144,7 @@ sub clone {
 
     # Don't add lexical in for, changing in place.
     foreach ( grep { ref $_ } values %{$new} ) {
-        if ( 'ARRAY' eq ref $_ ) {
+        if ( ref [] eq ref $_ ) {
             $_ = [ @{$_} ];
         }
     }

@@ -15,6 +15,7 @@ my %WriteMakefileArgs = (
     'Carp' => '0',
     'Cwd' => '0',
     'FindBin' => '0',
+    'Test::Exception' => '0',
     'Test::More' => '0'
   },
   'CONFIGURE_REQUIRES' => {
@@ -40,7 +41,7 @@ my %WriteMakefileArgs = (
     'Unix::PID' => '0.21',
     'YAML::Syck' => '0'
   },
-  'VERSION' => '0.602',
+  'VERSION' => '0.603',
   'test' => {
     'TESTS' => 't/*.t'
   }

@@ -6,6 +6,7 @@ build_requires:
   Carp: 0
   Cwd: 0
   FindBin: 0
+  Test::Exception: 0
   Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.31
@@ -27,4 +28,4 @@ requires:
   Text::Wrap: 0
   Unix::PID: 0.21
   YAML::Syck: 0
-version: 0.602
+version: 0.603

@@ -1,14 +1,18 @@
 package cPanel::TQSerializer::YAML;
 BEGIN {
-  $cPanel::TQSerializer::YAML::VERSION = '0.602';
+  $cPanel::TQSerializer::YAML::VERSION = '0.603';
 }
 
-# cpanel - cPanel/TQSerializer/YAML.pm            Copyright(c) 2011 cPanel, Inc.
+# cpanel - cPanel/TQSerializer/YAML.pm            Copyright(c) 2012 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 # This code is subject to the cPanel license. Unauthorized copying is prohibited
 
 use YAML::Syck ();
+
+# with no bless flags
+$YAML::Syck::LoadBlessed = 0;
+$YAML::Syck::NoBless     = 1;
 
 #use warnings;
 use strict;

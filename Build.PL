@@ -10,6 +10,7 @@ my %module_build_args = (
     'Carp' => '0',
     'Cwd' => '0',
     'FindBin' => '0',
+    'Test::Exception' => '0',
     'Test::More' => '0'
   },
   'configure_requires' => {
@@ -20,7 +21,7 @@ my %module_build_args = (
     'cPanel, Inc. <cpan@cpanel.net>'
   ],
   'dist_name' => 'cPanel-TaskQueue',
-  'dist_version' => '0.602',
+  'dist_version' => '0.603',
   'license' => 'perl',
   'module_name' => 'cPanel::TaskQueue',
   'recommends' => {},

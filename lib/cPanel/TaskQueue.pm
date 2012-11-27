@@ -1,6 +1,6 @@
 package cPanel::TaskQueue;
 BEGIN {
-  $cPanel::TaskQueue::VERSION = '0.602';
+  $cPanel::TaskQueue::VERSION = '0.603';
 }
 
 # cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2012 cPanel, Inc.
@@ -346,6 +346,8 @@ my $taskqueue_uuid = 'TaskQueue';
             grep {
                 defined $_
                   and eval { $_->isa('cPanel::TaskQueue::Task') }
+              } map {
+                eval { cPanel::TaskQueue::Task->reconstitute($_) }
               } @{$task_list}
         ];
     }

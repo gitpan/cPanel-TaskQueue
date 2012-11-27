@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Ctrl;
 BEGIN {
-  $cPanel::TaskQueue::Ctrl::VERSION = '0.602';
+  $cPanel::TaskQueue::Ctrl::VERSION = '0.603';
 }
 
 # cpanel - cPanel/TaskQueue/Ctrl.pm               Copyright(c) 2012 cPanel, Inc.
@@ -538,7 +538,7 @@ sub _verbosely_print_task {
 
 __END__
 
-Copyright (c) 2011, cPanel, Inc. All rights reserved.
+Copyright (c) 2012, cPanel, Inc. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.

@@ -8,7 +8,6 @@ README
 bin/taskqueuectl
 bin/taskqueued
 bin/taskqueuerun
-dist.ini
 lib/cPanel/StateFile.pm
 lib/cPanel/StateFile.pod
 lib/cPanel/StateFile/FileLocker.pm
@@ -96,5 +95,6 @@ t/taskqueue_task_clones.t
 t/taskqueue_task_deferrable.t
 t/taskqueue_task_load.t
 t/taskqueue_task_mutate.t
+t/taskqueue_task_reconstitute.t
 t/taskqueue_task_retries.t
 t/taskqueue_task_userdata.t
