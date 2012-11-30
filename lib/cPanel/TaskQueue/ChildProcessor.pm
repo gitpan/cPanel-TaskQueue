@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::ChildProcessor;
 BEGIN {
-  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.603';
+  $cPanel::TaskQueue::ChildProcessor::VERSION = '0.604';
 }
 
 # cpanel - cPanel/TaskQueue/ChildProcessor.pm     Copyright(c) 2012 cPanel, Inc.

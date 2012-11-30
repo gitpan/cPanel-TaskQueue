@@ -1,6 +1,6 @@
 package cPanel::StateFile;
 BEGIN {
-  $cPanel::StateFile::VERSION = '0.603';
+  $cPanel::StateFile::VERSION = '0.604';
 }
 
 # cpanel - cPanel/StateFile.pm                    Copyright(c) 2012 cPanel, Inc.
@@ -55,7 +55,7 @@ my $pkg = __PACKAGE__;
 
     package DefaultLogger;
 BEGIN {
-  $DefaultLogger::VERSION = '0.603';
+  $DefaultLogger::VERSION = '0.604';
 }
 
     sub new {
@@ -175,7 +175,7 @@ sub import {
 
         package cPanel::StateFile::Guard;
 BEGIN {
-  $cPanel::StateFile::Guard::VERSION = '0.603';
+  $cPanel::StateFile::Guard::VERSION = '0.604';
 }
 
         sub new {

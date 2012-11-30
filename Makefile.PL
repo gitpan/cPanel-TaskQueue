@@ -41,7 +41,7 @@ my %WriteMakefileArgs = (
     'Unix::PID' => '0.21',
     'YAML::Syck' => '0'
   },
-  'VERSION' => '0.603',
+  'VERSION' => '0.604',
   'test' => {
     'TESTS' => 't/*.t'
   }

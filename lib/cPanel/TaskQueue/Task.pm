@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Task;
 BEGIN {
-  $cPanel::TaskQueue::Task::VERSION = '0.603';
+  $cPanel::TaskQueue::Task::VERSION = '0.604';
 }
 
 # cpanel - cPanel/TaskQueue/Task.pm               Copyright(c) 2012 cPanel, Inc.

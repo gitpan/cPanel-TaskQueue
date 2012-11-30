@@ -1,6 +1,6 @@
 package cPanel::TaskQueue::Scheduler;
 BEGIN {
-  $cPanel::TaskQueue::Scheduler::VERSION = '0.603';
+  $cPanel::TaskQueue::Scheduler::VERSION = '0.604';
 }
 
 # cpanel - cPanel/TaskQueue/Scheduler.pm          Copyright(c) 2012 cPanel, Inc.
@@ -461,6 +461,7 @@ my $tasksched_uuid = 'TaskQueue-Scheduler';
         my ($item) = @_;
         return unless 'HASH' eq ref $item;
         return unless exists $item->{task} and exists $item->{time};
+        $item->{task} = cPanel::TaskQueue::Task->reconstitute( $item->{task} );
         return unless eval { $item->{task}->isa('cPanel::TaskQueue::Task') };
         return $item->{time} =~ /^\d+$/;
     }
