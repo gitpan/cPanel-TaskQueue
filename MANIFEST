@@ -5,6 +5,7 @@ MANIFEST
 META.yml
 Makefile.PL
 README
+TODO
 bin/taskqueuectl
 bin/taskqueued
 bin/taskqueuerun

@@ -1,9 +1,9 @@
 package cPanel::TaskQueue::PluginManager;
 BEGIN {
-  $cPanel::TaskQueue::PluginManager::VERSION = '0.604';
+  $cPanel::TaskQueue::PluginManager::VERSION = '0.605';
 }
 
-# cpanel - cPanel/TaskQueue/PluginManager.pm      Copyright(c) 2012 cPanel, Inc.
+# cpanel - cPanel/TaskQueue/PluginManager.pm      Copyright(c) 2013 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 #

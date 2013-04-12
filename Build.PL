@@ -21,7 +21,7 @@ my %module_build_args = (
     'cPanel, Inc. <cpan@cpanel.net>'
   ],
   'dist_name' => 'cPanel-TaskQueue',
-  'dist_version' => '0.604',
+  'dist_version' => '0.605',
   'license' => 'perl',
   'module_name' => 'cPanel::TaskQueue',
   'recommends' => {},
@@ -32,6 +32,7 @@ my %module_build_args = (
     'File::Spec' => '0',
     'Getopt::Long' => '0',
     'POSIX' => '0',
+    'Scalar::Util' => '0',
     'Storable' => '0',
     'Term::ReadLine' => '0',
     'Text::Wrap' => '0',

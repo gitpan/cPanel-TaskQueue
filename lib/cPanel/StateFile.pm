@@ -1,9 +1,9 @@
 package cPanel::StateFile;
 BEGIN {
-  $cPanel::StateFile::VERSION = '0.604';
+  $cPanel::StateFile::VERSION = '0.605';
 }
 
-# cpanel - cPanel/StateFile.pm                    Copyright(c) 2012 cPanel, Inc.
+# cpanel - cPanel/StateFile.pm                    Copyright(c) 2013 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 #
@@ -33,8 +33,9 @@ use strict;
 
 #use warnings;
 
-use Fcntl      ();
-use File::Path ();
+use Fcntl        ();
+use File::Path   ();
+use Scalar::Util ();
 
 my $the_logger;
 my $the_locker;
@@ -55,7 +56,7 @@ my $pkg = __PACKAGE__;
 
     package DefaultLogger;
 BEGIN {
-  $DefaultLogger::VERSION = '0.604';
+  $DefaultLogger::VERSION = '0.605';
 }
 
     sub new {
@@ -175,7 +176,7 @@ sub import {
 
         package cPanel::StateFile::Guard;
 BEGIN {
-  $cPanel::StateFile::Guard::VERSION = '0.604';
+  $cPanel::StateFile::Guard::VERSION = '0.605';
 }
 
         sub new {
@@ -360,6 +361,7 @@ BEGIN {
         $self->{file_size}     = -1;
         $self->{file_handle}   = undef;
         $self->{flock_timeout} = $args_ref->{timeout} || 60;
+        Scalar::Util::weaken($self->{data_object});
 
         $self->synch();
 
@@ -395,22 +397,20 @@ BEGIN {
     sub synch {
         my ($self) = @_;
 
-        my $guard;
+        # need to set the lock asap to avoid any concurrency problem
+        my $guard = cPanel::StateFile::Guard->new( { state => $self } );
 
         if ( !-e $self->{file_name} or -z _ ) {
-            $guard = cPanel::StateFile::Guard->new( { state => $self } );
 
             # File doesn't exist or is empty, initialize it.
             $guard->update_file();
         }
         else {
-            $guard = $self->_resynch($guard);
+            $self->_resynch($guard);
         }
 
         # if not assigned anywhere, let the guard die.
         return unless defined wantarray;
-
-        $guard ||= cPanel::StateFile::Guard->new( { state => $self } );
 
         # Otherwise return it.
         return $guard;

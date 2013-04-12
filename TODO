@@ -1,0 +1,4 @@
+* Reference to $!{EPERM} in _pid_alive in FileLocker fails on sandbox.
+* die came back as 'StateFile' not something useful.,
+* Should not die @_
+* Misspelling in StateFile.pod "cPanel::StateFile:Guard"
