@@ -1,9 +1,9 @@
 package cPanel::TaskQueue;
-BEGIN {
-  $cPanel::TaskQueue::VERSION = '0.605';
+{
+  $cPanel::TaskQueue::VERSION = '0.606';
 }
 
-# cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2013 cPanel, Inc.
+# cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2014 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 #
@@ -271,11 +271,20 @@ my $taskqueue_uuid = 'TaskQueue';
         # Use incoming parameters to override what's in the file.
         if ( grep { exists $args_ref->{$_} } qw/default_timeout max_timeout max_running default_child_timeout/ ) {
             my $guard = $self->{disk_state}->synch();
-            $self->{default_task_timeout}  = $args_ref->{default_timeout}       if exists $args_ref->{default_timeout};
-            $self->{max_task_timeout}      = $args_ref->{max_timeout}           if exists $args_ref->{max_timeout};
-            $self->{max_in_process}        = $args_ref->{max_running}           if exists $args_ref->{max_running};
-            $self->{default_child_timeout} = $args_ref->{default_child_timeout} if exists $args_ref->{default_child_timeout};
-            $guard->update_file();
+            my $altered;
+            for my $settings (
+                [qw(default_task_timeout  default_timeout)],
+                [qw(max_task_timeout      max_timeout)],
+                [qw(max_in_process        max_running)],
+                [qw(default_child_timeout default_child_timeout)],
+              ) {
+                my ( $internal_name, $arg_name ) = @$settings;
+                if ( exists $args_ref->{$arg_name} && $self->{$internal_name} ne $args_ref->{$arg_name} ) {
+                    $self->{$internal_name} = $args_ref->{$arg_name};
+                    ++$altered;
+                }
+            }
+            $guard->update_file() if $altered;
         }
 
         return $self;

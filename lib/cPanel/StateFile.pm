@@ -1,9 +1,9 @@
 package cPanel::StateFile;
-BEGIN {
-  $cPanel::StateFile::VERSION = '0.605';
+{
+  $cPanel::StateFile::VERSION = '0.606';
 }
 
-# cpanel - cPanel/StateFile.pm                    Copyright(c) 2013 cPanel, Inc.
+# cpanel - cPanel/StateFile.pm                    Copyright(c) 2014 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 #
@@ -55,8 +55,8 @@ my $pkg = __PACKAGE__;
 {
 
     package DefaultLogger;
-BEGIN {
-  $DefaultLogger::VERSION = '0.605';
+{
+  $DefaultLogger::VERSION = '0.606';
 }
 
     sub new {
@@ -175,8 +175,8 @@ sub import {
     {
 
         package cPanel::StateFile::Guard;
-BEGIN {
-  $cPanel::StateFile::Guard::VERSION = '0.605';
+{
+  $cPanel::StateFile::Guard::VERSION = '0.606';
 }
 
         sub new {
@@ -343,7 +343,7 @@ BEGIN {
         my $data_obj = $args_ref->{data_obj};
         $self->throw('Data object does not have required interface.')
           unless eval { $data_obj->can('load_from_cache') }
-              and eval { $data_obj->can('save_to_cache') };
+          and eval    { $data_obj->can('save_to_cache') };
 
         my ( $dirname, $file ) = ( $args_ref->{state_file} =~ m{^(.*)/([^/]*)$}g );
         $dirname =~ s{[^/]+/\.\./}{/}g;    # resolve parent references
@@ -361,7 +361,7 @@ BEGIN {
         $self->{file_size}     = -1;
         $self->{file_handle}   = undef;
         $self->{flock_timeout} = $args_ref->{timeout} || 60;
-        Scalar::Util::weaken($self->{data_object});
+        Scalar::Util::weaken( $self->{data_object} );
 
         $self->synch();
 

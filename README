@@ -1,11 +1,11 @@
 
 
 This archive contains the distribution cPanel-TaskQueue,
-version 0.605:
+version 0.606:
 
   Manage a FIFO queue of tasks to perform.
 
-This software is copyright (c) 2013 by cPanel, Inc..
+This software is copyright (c) 2014 by cPanel, Inc..
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

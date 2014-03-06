@@ -5,7 +5,7 @@ cPanel::StateFile - Standardize the handling of file-based state data.
 
 =head1 VERSION
 
-This document describes cPanel::StateFile 0.605
+This document describes cPanel::StateFile 0.606
 
 =head1 SYNOPSIS
 
@@ -129,7 +129,7 @@ The method should throw an exception on failure.
 This I<optional> parameter specifies the timeout in seconds for C<flock>ing the
 file on open. The default value is 60 seconds.
 
-=back 
+=back
 
 =item $state->synch()
 
@@ -331,7 +331,7 @@ and it's size does not change, it may not be detected.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2013, cPanel, Inc. All rights resrved.
+Copyright (c) 2014, cPanel, Inc. All rights resrved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.

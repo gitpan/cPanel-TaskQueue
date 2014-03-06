@@ -1,9 +1,9 @@
 package cPanel::TaskQueue::Processor;
-BEGIN {
-  $cPanel::TaskQueue::Processor::VERSION = '0.605';
+{
+  $cPanel::TaskQueue::Processor::VERSION = '0.606';
 }
 
-# cpanel - cPanel/TaskQueue/Processor.pm i        Copyright(c) 2013 cPanel, Inc.
+# cpanel - cPanel/TaskQueue/Processor.pm          Copyright(c) 2014 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 #
@@ -134,8 +134,8 @@ use strict;
 {
 
     package cPanel::TaskQueue::Processor::CodeRef;
-BEGIN {
-  $cPanel::TaskQueue::Processor::CodeRef::VERSION = '0.605';
+{
+  $cPanel::TaskQueue::Processor::CodeRef::VERSION = '0.606';
 }
     use base 'cPanel::TaskQueue::Processor';
 

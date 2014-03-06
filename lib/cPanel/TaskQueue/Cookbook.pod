@@ -142,7 +142,7 @@ Say you have a very simple command to process and don't want to create a class
 to process it. You can also call C<register_task_processor> with a code reference
 and it will create the necessary wrapper to do what you want. It expects to pass
 the arguments from the command request to the coderef.
- 
+
    cPanel::TaskQueue->register_task_processor( 'echo', sub { print @_; } );
 
 If you use this method, you obviously have to accept the default behavior for
@@ -488,7 +488,7 @@ again. For example,
         # wait two hours if we're down to our last try.
         return 2*3600 if 1 == $task->retries_remaining();
         # Otherwise try in one hour.
-        return 3600; 
+        return 3600;
     }
 
 =head3 I want to retry on failure, not just on timeout.
@@ -609,7 +609,7 @@ tasks to complete before continuing.
 
     $tq->finish_all_processing();
 
-B<Warning:> This method can block for an extremely long period of time depending on how the 
+B<Warning:> This method can block for an extremely long period of time depending on how the
 queue is configured and what tasks are currently being processed.
 
 =head3 I want to know when the next scheduled task should start.
@@ -632,7 +632,7 @@ and a C<cPanel::TaskQueue> object for this action. If you do not have a
 C<cPanel::TaskQueue::Scheduler> object, see L</"I need to access a Scheduler defined elsewhere.">
 If you do not have a C<cPanel::TaskQueue> object, see  L</"I need to access a TaskQueue defined elsewhere.">
 
-   my $count = $ts->process_ready_tasks( $tq ); 
+   my $count = $ts->process_ready_tasks( $tq );
 
 The return value is the number of tasks queued in this call. This is necessary
 because it is very possible that more than one task will be ready to be queued
@@ -695,7 +695,7 @@ perform the necessary processing.
                 my $wait = $sched->seconds_until_next_task();
                 # loop if some task is now ready
                 next if defined $wait and 0 == $wait;
-    
+
                 $wait = $wait_time if !$wait || $wait > $wait_time;
                 sleep $wait;
             }

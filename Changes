@@ -1,5 +1,8 @@
 Revision history for cPanel-TaskQueue
 
+0.606     2014-03-06 19:51:16 UTC
+0.606     2014-02-20 12:56:10 America/Chicago
+       Only update state file if not already up to date.
 0.605     2013-04-12 11:09:30 America/Chicago
        Remove concurrency problem that could result in lost tasks. Weaken
        reference to data object that causes a memory leak.

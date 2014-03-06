@@ -4,47 +4,50 @@ use warnings;
 
 
 
-use ExtUtils::MakeMaker 6.31;
+use ExtUtils::MakeMaker 6.30;
 
 
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'Manage a FIFO queue of tasks to perform.',
-  'AUTHOR' => 'cPanel, Inc. <cpan@cpanel.net>',
-  'BUILD_REQUIRES' => {
-    'Carp' => '0',
-    'Cwd' => '0',
-    'FindBin' => '0',
-    'Test::Exception' => '0',
-    'Test::More' => '0'
+  "ABSTRACT" => "Manage a FIFO queue of tasks to perform.",
+  "AUTHOR" => "cPanel, Inc. <cpan\@cpanel.net>",
+  "BUILD_REQUIRES" => {
+    "Carp" => 0,
+    "Cwd" => 0,
+    "FindBin" => 0,
+    "Test::Exception" => 0,
+    "Test::More" => 0
   },
-  'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.31'
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30"
   },
-  'DISTNAME' => 'cPanel-TaskQueue',
-  'EXE_FILES' => [
-    'bin/taskqueuectl',
-    'bin/taskqueued',
-    'bin/taskqueuerun'
+  "DISTNAME" => "cPanel-TaskQueue",
+  "EXE_FILES" => [
+    "bin/taskqueued",
+    "bin/taskqueuerun",
+    "bin/taskqueuectl"
   ],
-  'LICENSE' => 'perl',
-  'NAME' => 'cPanel::TaskQueue',
-  'PREREQ_PM' => {
-    'Fcntl' => '0',
-    'File::Path' => '0',
-    'File::Spec' => '0',
-    'Getopt::Long' => '0',
-    'POSIX' => '0',
-    'Scalar::Util' => '0',
-    'Storable' => '0',
-    'Term::ReadLine' => '0',
-    'Text::Wrap' => '0',
-    'Unix::PID' => '0.21',
-    'YAML::Syck' => '0'
+  "LICENSE" => "perl",
+  "NAME" => "cPanel::TaskQueue",
+  "PREREQ_PM" => {
+    "Fcntl" => 0,
+    "File::Path" => 0,
+    "File::Spec" => 0,
+    "Getopt::Long" => 0,
+    "POSIX" => 0,
+    "Scalar::Util" => 0,
+    "Storable" => 0,
+    "Term::ReadLine" => 0,
+    "Text::Wrap" => 0,
+    "Unix::PID" => "0.21",
+    "YAML::Syck" => 0,
+    "base" => 0,
+    "strict" => 0,
+    "warnings" => 0
   },
-  'VERSION' => '0.605',
-  'test' => {
-    'TESTS' => 't/*.t'
+  "VERSION" => "0.606",
+  "test" => {
+    "TESTS" => "t/*.t"
   }
 );
 

@@ -5,7 +5,7 @@ cPanel::TaskQueue - FIFO queue of tasks to perform
 
 =head1 VERSION
 
-This document describes cPanel::TaskQueue version 0.605
+This document describes cPanel::TaskQueue version 0.606
 
 =head1 SYNOPSIS
 
@@ -74,7 +74,7 @@ The value is in seconds and defaults to the cPanel::StateFile default value.
 
 This optional parameter specifies the default amount of time (in seconds) to wait
 for an in-process task to run. The default value is 60 seconds.
-    
+
 This timeout may be overridden for a particular command by the
 C<cPanel::TaskQueue::Processor> object.
 
@@ -96,7 +96,7 @@ processing blocks until one or more child processes exit. The default value is 2
 
 This optional parameter specifies the default amount of time (in seconds) to wait
 for a child task to run. The default value is 3600 seconds (1 hour).
-    
+
 This timeout may be overridden for a particular command by the
 C<cPanel::TaskQueue::Processor> object.
 
@@ -218,7 +218,7 @@ Does the specified I<uuid> reference a task in the queue?
 
 Because of the nature of a task queue, the particular I<uuid> tested may be scheduled
 for processsing immediately after the test. Therefore, a true answer is not as useful as
-it might seem. A false answer does tell us that the item is no longer waiting. 
+it might seem. A false answer does tell us that the item is no longer waiting.
 
 =item $q->find_task( $uuid )
 
@@ -508,7 +508,11 @@ None reported.
 
 =head1 BUGS AND LIMITATIONS
 
-none reported.
+In spite of the locking that's used to prevent multiple concurrent writes
+or reads being combined with writes, it is sometimes possible for a state
+file to become corrupt or improperly emptied if many processes are attempting
+to update it at the same time. There is most likely still a race condition
+that's exposed under heavy load.
 
 =head1 SEE ALSO
 
@@ -516,7 +520,7 @@ cPanel::TaskQueue::Processor, cPanel::TaskQueue::Task, and cPanel::StateFile
 
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) 2013, cPanel, Inc. All rights reserved.
+Copyright (c) 2014, cPanel, Inc. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.

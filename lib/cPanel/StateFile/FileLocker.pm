@@ -1,9 +1,9 @@
 package cPanel::StateFile::FileLocker;
-BEGIN {
-  $cPanel::StateFile::FileLocker::VERSION = '0.605';
+{
+  $cPanel::StateFile::FileLocker::VERSION = '0.606';
 }
 
-# cpanel - cPanel/StateFile/FileLocker.pm         Copyright(c) 2013 cPanel, Inc.
+# cpanel - cPanel/StateFile/FileLocker.pm         Copyright(c) 2014 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
 #
