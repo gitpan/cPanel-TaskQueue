@@ -8,22 +8,21 @@
 #  variable CPANEL_SLOW_TESTS set.
 
 use strict;
+use warnings;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
-use File::Path ();
+use File::Temp ();
 
-use Test::More tests => 85;
+use Test::More tests => 93;
+use Test::Exception;
 use cPanel::TaskQueue::Scheduler;
+use MockQueue;
 
-my $tmpdir   = './tmp';
-my $statedir = $tmpdir;
+my $tmpdir   = File::Temp->newdir();
+my $statedir = "$tmpdir";
 
-# In case the last test did not succeed.
-cleanup();
-File::Path::mkpath($tmpdir) or die "Unable to create tmpdir: $!";
-
-eval { cPanel::TaskQueue::Scheduler->new( { state_dir => $statedir } ); };
-like( $@, qr/scheduler name/, 'Must supply a name.' );
+throws_ok { cPanel::TaskQueue::Scheduler->new( { state_dir => $statedir } ); } qr/scheduler name/,
+    'Must supply a name.';
 
 my $sched = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', state_dir => $statedir } );
 isa_ok( $sched, 'cPanel::TaskQueue::Scheduler', 'Correct object built.' );
@@ -32,14 +31,10 @@ isa_ok( $sched, 'cPanel::TaskQueue::Scheduler', 'Correct object built.' );
 is( $sched->_state_file, "$statedir/tasks_sched.stor", 'State file has correct form.' );
 
 # Check failures to schedule
-eval { $sched->schedule_task(); };
-like( $@, qr/empty command/, 'Must supply the command.' );
-eval { $sched->schedule_task( '   ', { delay_seconds => 5 } ); };
-like( $@, qr/empty command/, 'Must supply a non-empty command.' );
-eval { $sched->schedule_task('noop 0'); };
-like( $@, qr/not a hash ref/, 'Must supply the time hash.' );
-eval { $sched->schedule_task( 'noop 0', 10 ); };
-like( $@, qr/not a hash ref/, 'Second arg must be a hash ref' );
+throws_ok { $sched->schedule_task(); } qr/empty command/, 'Must supply the command.';
+throws_ok { $sched->schedule_task( '   ', { delay_seconds => 5 } ); } qr/empty command/, 'Must supply a non-empty command.';
+throws_ok { $sched->schedule_task('noop 0'); } qr/not a hash ref/, 'Must supply the time hash.';
+throws_ok { $sched->schedule_task( 'noop 0', 10 ); } qr/not a hash ref/, 'Second arg must be a hash ref';
 
 # Check ability to schedule
 my @qid;
@@ -141,7 +136,46 @@ while ( my $task = $sched->peek_next_task() ) {
 ok( $sched->schedule_task( 'noop 0', {} ), 'Scheduled with no time setting.' );
 ok( $sched->seconds_until_next_task() <= 0, 'Scheduled right now (or in the last second.' );
 
-cleanup();
+{
+    my $label = 'flush_all_tasks';
+    # Start with clean state
+    $tmpdir   = File::Temp->newdir();
+    $statedir = "$tmpdir";
+
+    my $sched = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', state_dir => $statedir } );
+    my $time = time + 10;
+    my @qid;
+    foreach my $cnt ( 1 .. 4 ) {
+        push @qid, $sched->schedule_task( "noop $cnt", { at_time => $time+$cnt } );
+    }
+    is( $sched->how_many_scheduled(), 4, "$label: correct number tasks scheduled." );
+    my $queue = MockQueue->new();
+    my @flushed = $sched->flush_all_tasks( $queue );
+    is( @flushed, 4, "$label: All tasks flushed." );
+    is( $sched->how_many_scheduled(), 0, "$label: No scheduled tasks remain" );
+    my @tasks = $queue->get_tasks();
+    is( scalar(@tasks), 4, "$label: correct number of tasks queued" );
+    # The following is only true because MockQueue does not recreate the tasks.
+    is_deeply( [map {$_->uuid} @tasks], \@flushed, "$label: Correct tasks queued" )
+        or note explain( \@tasks );
+}
+
+{
+    my $label = 'delete_all_tasks';
+    # Start with clean state
+    $tmpdir   = File::Temp->newdir();
+    $statedir = "$tmpdir";
+
+    my $sched = cPanel::TaskQueue::Scheduler->new( { name => 'tasks', state_dir => $statedir } );
+    my $time = time + 10;
+    my @qid;
+    foreach my $cnt ( 1 .. 4 ) {
+        push @qid, $sched->schedule_task( "noop $cnt", { at_time => $time+$cnt } );
+    }
+    is( $sched->how_many_scheduled(), 4, "$label: correct number tasks scheduled." );
+    is( $sched->delete_all_tasks(), 4, "$label: all tasks deleted" );
+    is( $sched->how_many_scheduled(), 0, "$label: No scheduled tasks remain" );
+}
 
 sub insert_tasks {
     my $s     = shift;
@@ -153,6 +187,7 @@ sub insert_tasks {
         ok( $qid, "$label [$i]: scheduled successfully" );
         ++$i;
     }
+    return;
 }
 
 sub remove_and_check_tasks {
@@ -166,6 +201,7 @@ sub remove_and_check_tasks {
         ok( $s->unschedule_task( $first->uuid() ), "$label [$i]: Remove queue front." );
         ++$i;
     }
+    return;
 }
 
 sub check_task_insertion {
@@ -174,9 +210,5 @@ sub check_task_insertion {
 
     insert_tasks( $s, $label, @_ );
     remove_and_check_tasks( $s, $label, @_ );
-}
-
-# Clean up after myself
-sub cleanup {
-    File::Path::rmtree($tmpdir) if -d $tmpdir;
+    return;
 }

@@ -5,7 +5,7 @@ use FindBin;
 use lib "$FindBin::Bin/mocks";
 use File::Path ();
 
-use Test::More tests => 11;
+use Test::More tests => 15;
 use cPanel::TaskQueue;
 
 my $tmpdir = './tmp';
@@ -34,6 +34,17 @@ ok( !$queue->is_paused, 'TaskQueue is unpaused.' );
 ok( $queue->has_work_to_do(), 'Unpaused queue ow has work to do' );
 ok( $queue->process_next_task(), 'Unpaused queue processes tasks' );
 ok( !$queue->is_task_queued( $qid ), 'no longer found in queue' );
+
+{
+    my $label = "Resume in other copy";
+    $queue->pause_processing;
+    ok( $queue->is_paused, "$label: TaskQueue is paused." );
+    my $queue2 = cPanel::TaskQueue->new( { name => 'tasks', state_dir => $statedir } );
+    ok( $queue2->is_paused, "$label: TaskQueue2 is paused." );
+    $queue2->resume_processing;
+    ok( !$queue2->is_paused, "$label: TaskQueue2 is unpaused." );
+    ok( !$queue->is_paused, "$label: TaskQueue is unpaused." );
+}
 
 cleanup();
 

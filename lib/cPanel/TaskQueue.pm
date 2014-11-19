@@ -1,8 +1,5 @@
 package cPanel::TaskQueue;
-{
-  $cPanel::TaskQueue::VERSION = '0.606';
-}
-
+$cPanel::TaskQueue::VERSION = '0.750';
 # cpanel - cPanel/TaskQueue.pm                    Copyright(c) 2014 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
@@ -112,7 +109,7 @@ sub _valid_serializer {
 
 sub _get_serializer {
     unless ( defined $the_serializer ) {
-        eval 'use cPanel::TQSerializer::Storable;';    ## no crititc (ProhibitStringyEval)
+        eval 'use cPanel::TQSerializer::Storable;';    ## no critic(ProhibitStringyEval)
         cPanel::StateFile->_throw(@_) if $@;
         $the_serializer = 'cPanel::TQSerializer::Storable';
     }
@@ -163,7 +160,12 @@ my $taskqueue_uuid = 'TaskQueue';
         $guard->update_file();
         return;
     }
-    sub is_paused { return $_[0]->{paused} || 0; }
+    sub _is_paused { return $_[0]->{paused} || 0; }
+    sub is_paused {
+        my ($self) = @_;
+        $self->{disk_state}->synch();
+        return $self->_is_paused();
+    }
 
     # --------------------------------------
     # Class methods
@@ -337,7 +339,7 @@ my $taskqueue_uuid = 'TaskQueue';
         $self->{max_task_timeout}      = $meta->{max_task_to}  if $meta->{max_task_to} > 0;
         $self->{max_in_process}        = $meta->{max_running}  if $meta->{max_running} > 0;
         $self->{default_child_timeout} = $meta->{def_child_to} if $meta->{def_child_to} > 0;
-        $self->{paused} = 1 if exists $meta->{paused} && $meta->{paused};
+        $self->{paused}    = (exists $meta->{paused} && $meta->{paused}) ? 1 : 0;
         $self->{defer_obj} = exists $meta->{defer_obj} ? $meta->{defer_obj} : undef;
 
         # Clean queues that have been read from disk.
@@ -499,7 +501,7 @@ my $taskqueue_uuid = 'TaskQueue';
         $self->_clean_completed_tasks();
 
         # If we are paused, there is no work to do.
-        return if $self->{paused};
+        return if $self->_is_paused;
 
         return scalar( @{ $self->{processing_list} } ) < $self->{max_in_process} && 0 != @{ $self->{queue_waiting} };
     }
@@ -535,7 +537,7 @@ my $taskqueue_uuid = 'TaskQueue';
         }
 
         # If we are paused, there is no work to do.
-        return 1 if $self->{paused};
+        return 1 if $self->_is_paused;
 
         my ( $task, $processor );
         while ( !$task ) {
@@ -596,7 +598,7 @@ my $taskqueue_uuid = 'TaskQueue';
 
             # remove finished item from the list.
             $self->{processing_list} = [ grep { $_->uuid() ne $uuid } @{ $self->{processing_list} } ];
-            $self->_remove_task_from_deferral_object();
+            $self->_remove_task_from_deferral_object( $task );
         }
 
         # Don't lose any exceptions.
@@ -652,6 +654,21 @@ my $taskqueue_uuid = 'TaskQueue';
             processing => [ map { $_->clone() } @{ $self->{processing_list} } ],
             deferred   => [ map { $_->clone() } @{ $self->{deferral_queue} } ],
         };
+    }
+
+    sub delete_all_unprocessed_tasks {
+        my ($self) = @_;
+        my $guard = $self->{disk_state}->synch();
+
+        # Empty the deferral and waiting queues. Can't change processing list,
+        # those tasks are actually in progress.
+        my $count = @{ $self->{deferral_queue} };
+        $self->{deferral_queue} = [];
+        $count += @{ $self->{queue_waiting} };
+        $self->{queue_waiting} = [];
+        $guard->update_file();
+
+        return $count;
     }
 
     # ---------------------------------------------------------------
@@ -734,11 +751,18 @@ my $taskqueue_uuid = 'TaskQueue';
         my ( $self, $guard ) = @_;
 
         my $num_processing = @{ $self->{processing_list} };
-        return unless $num_processing;
+        my $num_deferred   = @{ $self->{deferral_queue} };
+
+        # If the processing_list is empty, and we have no deferred tasks we
+        # are finished processing
+        return if !$num_processing && !$num_deferred;
 
         # Remove tasks that have already completed from the in-memory list.
         $self->_remove_completed_tasks_from_list();
-        return if @{ $self->{processing_list} } == $num_processing;
+
+        # No changes, we can leave
+        return if @{ $self->{processing_list} } == $num_processing
+                && @{ $self->{deferral_queue} } == $num_deferred;
 
         # Was not locked, so we need to lock and remove completed tasks again.
         if ( !$guard ) {
@@ -850,7 +874,7 @@ __PACKAGE__->register_task_processor( 'noop', sub { } );
 
 __END__
 
-Copyright (c) 2010, cPanel, Inc. All rights reserved.
+Copyright (c) 2014, cPanel, Inc. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself. See L<perlartistic>.

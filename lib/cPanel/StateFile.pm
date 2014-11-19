@@ -1,8 +1,5 @@
 package cPanel::StateFile;
-{
-  $cPanel::StateFile::VERSION = '0.606';
-}
-
+$cPanel::StateFile::VERSION = '0.750';
 # cpanel - cPanel/StateFile.pm                    Copyright(c) 2014 cPanel, Inc.
 #                                                           All rights Reserved.
 # copyright@cpanel.net                                         http://cpanel.net
@@ -55,11 +52,8 @@ my $pkg = __PACKAGE__;
 {
 
     package DefaultLogger;
-{
-  $DefaultLogger::VERSION = '0.606';
-}
-
-    sub new {
+$DefaultLogger::VERSION = '0.750';
+sub new {
         my ($class) = @_;
         return bless {}, $class;
     }
@@ -175,11 +169,8 @@ sub import {
     {
 
         package cPanel::StateFile::Guard;
-{
-  $cPanel::StateFile::Guard::VERSION = '0.606';
-}
-
-        sub new {
+$cPanel::StateFile::Guard::VERSION = '0.750';
+sub new {
             my ( $class, $args_ref ) = @_;
             $pkg->throw('Args parameter must be a hash reference.') unless 'HASH' eq ref $args_ref;
             $pkg->throw('No StateFile.') unless exists $args_ref->{state};

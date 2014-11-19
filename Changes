@@ -1,6 +1,18 @@
 Revision history for cPanel-TaskQueue
 
-0.606     2014-03-06 19:51:16 UTC
+0.750     2014-11-19 15:12:19-06:00 America/Chicago
+     - Correct deferral logic to clear tags when a task completes
+     - Correct flawed load logic relating to resuming after pause.
+0.700    2014-10-15 16:37:12 America/Chicago
+     - Add ability to flush all scheduled tasks to the waiting queue, whether
+       or not they have reached their scheduled time.
+     - Add the ability to delete all scheduled tasks.
+     - Add the ability to delete all unprocessed tasks.
+     - Corrected handling of optional --serial parameter in taskqueuectl.
+     - Added flush_scheduled_tasks to Ctrl logic to support the new
+       functionality.
+     - Added delete_unprocessed_tasks to Ctrl logic to support the new
+       functionality.
 0.606     2014-02-20 12:56:10 America/Chicago
        Only update state file if not already up to date.
 0.605     2013-04-12 11:09:30 America/Chicago

@@ -6,33 +6,29 @@
 use strict;
 use FindBin;
 use lib "$FindBin::Bin/mocks";
-use File::Path ();
+use File::Temp;
+use File::Path;
 use Cwd;
 
-use Test::More 'no_plan'; #tests => 42;
+use Test::More tests => 86;
+use Test::Exception;
 use cPanel::TaskQueue::Ctrl;
 
-my $tmpdir = './tmp';
+my $tmpdir = File::Temp->newdir();
 my $statedir = "$tmpdir/state_test";
+File::Path::mkpath( $statedir );
 
-# In case the last test did not succeed.
-cleanup();
-File::Path::mkpath( $statedir ) or die "Unable to create tmpdir: $!";
-
-eval { cPanel::TaskQueue::Ctrl->new( 'fred' ); };
-like( $@, qr/not a hashref/, 'Ctrl::new requires a hashref.' );
-
-eval { cPanel::TaskQueue::Ctrl->new( { qname => 'test' } ); };
-like( $@, qr/required 'qdir'/, 'Required qdir test.' );
-
-eval { cPanel::TaskQueue::Ctrl->new( { qdir => $statedir } ); };
-like( $@, qr/required 'qname'/, 'Required qname test.' );
+throws_ok { cPanel::TaskQueue::Ctrl->new( 'fred' ); } qr/not a hashref/, 'Ctrl::new requires a hashref.';
+throws_ok { cPanel::TaskQueue::Ctrl->new( { qname => 'test' } ); } qr/required 'qdir'/, 'Required qdir test.';
+throws_ok { cPanel::TaskQueue::Ctrl->new( { qdir => $statedir } ); } qr/required 'qname'/, 'Required qname test.';
 
 my $output;
 my $ctrl = cPanel::TaskQueue::Ctrl->new( { qdir => $statedir, qname => 'test', out => \$output } );
 isa_ok( $ctrl, 'cPanel::TaskQueue::Ctrl' );
 
-my @commands = sort qw/queue pause resume unqueue schedule unschedule list find plugins commands status convert info process/;
+my @commands = sort qw/queue pause resume unqueue schedule unschedule list find
+                       plugins commands status convert info process
+                       flush_scheduled_tasks delete_unprocessed_tasks/;
 foreach my $cmd (@commands) {
     my @ret = $ctrl->synopsis( $cmd );
     like( $ret[0], qr/^$cmd/, "$cmd: Found synopsis" );
@@ -46,14 +42,7 @@ foreach my $cmd (@commands) {
 
 {
     my @synopsis = $ctrl->synopsis();
-    is( scalar(@synopsis), 2*@commands, 'The right number of commands are returned for synopsis' );
+    is( scalar(@synopsis), 2*@commands, 'The right number of lines are returned for synopsis' );
     my @help = $ctrl->help();
-    is( scalar(@help), 3*@commands, 'The right number of commands are returned for help' );
-}
-
-cleanup();
-
-# Clean up after myself
-sub cleanup {
-    File::Path::rmtree( $tmpdir );
+    is( scalar(@help), 3*@commands, 'The right number of lines are returned for help' );
 }
